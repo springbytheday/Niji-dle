@@ -1,0 +1,240 @@
+const COLUMNS = [
+  { key: 'debutYear', label: 'Debut' },
+  { key: 'gender', label: 'Gender' },
+  { key: 'species', label: 'Species' },
+  { key: 'birthMonth', label: 'Birth Mo.' },
+  { key: 'liverColor', label: 'Color' },
+];
+
+function renderBoard(animateFirst = false) {
+  const board = document.getElementById('board');
+  if (!board) return;
+
+  if (guesses.length === 0) {
+    board.innerHTML = `
+      <div class="empty-state">
+        <p>Make your first guess to start the board.</p>
+      </div>`;
+    return;
+  }
+
+  // Respect reduced-motion preferences by skipping the flip animation
+  // path entirely rather than relying on the CSS `animation: none`
+  // override — that override alone would leave a cell stuck with its
+  // temporary inline reveal-color variables forever, since `animationend`
+  // never fires when there's no animation to end.
+  const shouldAnimate =
+    animateFirst && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const header = `
+    <div class="row row--header">
+      <div class="cell cell--name">Liver</div>
+      ${COLUMNS.map((c) => `<div class="cell cell--header">${c.label}</div>`).join('')}
+    </div>`;
+
+  const rows = guesses
+    .map((g, i) => renderRow(g, i === 0, i === 0 && shouldAnimate))
+    .join('');
+
+  board.innerHTML = header + rows;
+
+  if (shouldAnimate) {
+    attachFlipEndHandlers(board);
+  }
+}
+
+// Once a cell's flip animation finishes, swap it from the temporary
+// `cell--flip` class (whose color comes from inline --flip-reveal-*
+// variables) to its permanent static `cell--{status}` class. Without
+// this, the cell would revert to its unstyled default the instant the
+// animation ends, since CSS animations don't leave their end state
+// applied as a real style by default in the way we need here.
+function attachFlipEndHandlers(container) {
+  const flippingCells = container.querySelectorAll('.cell--flip');
+  flippingCells.forEach((cell) => {
+    cell.addEventListener(
+      'animationend',
+      () => {
+        const status = cell.dataset.status;
+        cell.classList.remove('cell--flip');
+        cell.classList.add(`cell--${status}`);
+        cell.style.removeProperty('--flip-delay');
+        cell.style.removeProperty('--flip-reveal-bg');
+        cell.style.removeProperty('--flip-reveal-color');
+      },
+      { once: true }
+    );
+  });
+}
+
+function renderRow(guessResult, isNewest, animate) {
+  const { talent } = guessResult;
+  const rowClass = isNewest ? 'row row--newest' : 'row';
+
+  const cells = COLUMNS.map((col, i) =>
+    renderCell(col.key, guessResult[col.key], animate ? i : null)
+  ).join('');
+
+  return `
+    <div class="${rowClass}">
+      <div class="cell cell--name">
+        <span class="talent-name">${escapeHtml(talent.name)}</span>
+      </div>
+      ${cells}
+    </div>`;
+}
+
+function renderCell(key, data, flipIndex) {
+  if (key === 'debutYear' || key === 'birthMonth') return renderArrowCell(data, flipIndex);
+  if (key === 'liverColor') return renderLiverColorCell(data, flipIndex);
+  return renderTextCell(data, flipIndex);
+}
+
+// Builds the shared flip-related class/style attributes for a cell.
+// flipIndex is the cell's column position when animating (used to
+// stagger the reveal left-to-right), or null when not animating —
+// in which case the cell just gets its normal static status class
+// with no animation, exactly as before this feature was added.
+function flipAttrs(status, flipIndex) {
+  if (flipIndex == null) {
+    return { classes: `cell--${status}`, style: '' };
+  }
+  const delayMs = flipIndex * 150;
+  const reveal = {
+    hit: { bg: 'var(--hit)', color: '#fff', border: 'transparent' },
+    partial: { bg: 'var(--partial)', color: '#1a1300', border: 'transparent' },
+    miss: { bg: 'var(--miss)', color: 'var(--text)', border: 'transparent' },
+    unknown: { bg: 'transparent', color: 'var(--text-dim)', border: 'var(--unknown)' },
+  }[status];
+
+  const style = `--flip-delay:${delayMs}ms; --flip-reveal-bg: ${reveal.bg}; --flip-reveal-color: ${reveal.color}; --flip-reveal-border: ${reveal.border};`;
+  return { classes: 'cell--flip', style };
+}
+
+function renderTextCell(data, flipIndex) {
+  const { classes, style } = flipAttrs(data.status, flipIndex);
+  const display = data.value == null ? '?' : escapeHtml(String(data.value));
+  return `<div class="cell ${classes}" style="${style}" data-status="${data.status}">${display}</div>`;
+}
+
+// Shared by any attribute that's compared linearly with an up/down
+// arrow toward the answer (debut year, birth month). Just displays
+// the raw value as-is, so debut year shows a number and birth month
+// shows its month name string unchanged.
+function renderArrowCell(data, flipIndex) {
+  const { classes, style } = flipAttrs(data.status, flipIndex);
+  const display = data.value == null ? '?' : escapeHtml(String(data.value));
+  let arrow = '';
+  if (data.direction === 'up') arrow = '<span class="arrow arrow--up">&uarr;</span>';
+  if (data.direction === 'down') arrow = '<span class="arrow arrow--down">&darr;</span>';
+  return `<div class="cell ${classes}" style="${style}" data-status="${data.status}">${display}${arrow}</div>`;
+}
+
+function renderLiverColorCell(data, flipIndex) {
+  const { classes, style } = flipAttrs(data.status, flipIndex);
+  const swatch = data.value
+    ? `<span class="swatch" style="background:${escapeAttr(data.value)}"></span>`
+    : '?';
+  return `<div class="cell ${classes} cell--swatches" style="${style}" data-status="${data.status}">${swatch}</div>`;
+}
+
+function showEndState() {
+  const banner = document.getElementById('end-banner');
+  const input = document.getElementById('guess-input');
+  if (input) {
+    input.disabled = true;
+    input.placeholder = "Today's liver has been found";
+  }
+  if (banner) {
+    banner.innerHTML = `
+      <div class="end-card">
+        <p class="end-title">It was ${escapeHtml(answerTalent.name)}!</p>
+        <p class="end-sub">Come back tomorrow for a new liver.</p>
+      </div>`;
+    banner.classList.add('visible');
+  }
+}
+
+// ----------------------------------------------------------------
+// Autocomplete
+// ----------------------------------------------------------------
+function setupAutocomplete() {
+  const input = document.getElementById('guess-input');
+  const list = document.getElementById('suggestions');
+  if (!input || !list) return;
+
+  input.addEventListener('input', () => {
+    const query = input.value.trim().toLowerCase();
+    list.innerHTML = '';
+    if (!query) {
+      list.classList.remove('visible');
+      return;
+    }
+
+    const guessedIds = new Set(guesses.map((g) => g.talent.id));
+    const matches = allTalents
+      .filter((t) => !guessedIds.has(t.id))
+      .filter((t) => matchesNamePrefix(t.name, query))
+      .slice(0, 8);
+
+    if (matches.length === 0) {
+      list.classList.remove('visible');
+      return;
+    }
+
+    matches.forEach((t) => {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'suggestion-item';
+      item.textContent = t.name;
+      item.addEventListener('click', () => {
+        submitGuess(t);
+        input.value = '';
+        list.innerHTML = '';
+        list.classList.remove('visible');
+      });
+      list.appendChild(item);
+    });
+
+    list.classList.add('visible');
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!list.contains(e.target) && e.target !== input) {
+      list.classList.remove('visible');
+    }
+  });
+}
+
+// ----------------------------------------------------------------
+// Helpers
+// ----------------------------------------------------------------
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function escapeAttr(str) {
+  return String(str).replace(/[^#a-zA-Z0-9]/g, '');
+}
+
+// Matches if the FIRST or LAST word of the name starts with the query.
+// Middle words are normally ignored — EXCEPT single-letter middle words
+// (e.g. a middle initial like "Kuzuha K Something"), which are checked
+// regardless of position. A single letter can't meaningfully have a
+// "prefix" beyond itself, so that check is an exact match rather than
+// startsWith.
+function matchesNamePrefix(name, query) {
+  const words = name.toLowerCase().trim().split(/\s+/);
+  if (words.length === 0) return false;
+
+  const firstWord = words[0];
+  const lastWord = words[words.length - 1];
+
+  if (firstWord.startsWith(query) || lastWord.startsWith(query)) {
+    return true;
+  }
+
+  return words.some((w) => w.length === 1 && w === query);
+}

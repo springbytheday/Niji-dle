@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Niji-Dle &mdash; Daily Nijisanji Guessing Game</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="stage">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">Niji-Dle</span>
+      </div>
+    </header>
+
+    <main class="game">
+      <p class="prompt">Guess today&rsquo;s Nijisanji liver</p>
+
+      <div class="guess-box">
+        <input id="guess-input" type="text" autocomplete="off" placeholder="Type a liver name&hellip;"
+          aria-label="Guess a liver" />
+        <div id="suggestions" class="suggestions" role="listbox"></div>
+      </div>
+
+      <div id="end-banner" class="end-banner"></div>
+
+      <section id="board" class="board" aria-live="polite">
+        <div class="empty-state">
+          <p>Loading livers&hellip;</p>
+        </div>
+      </section>
+
+      <footer class="legend">
+        <span class="legend-item"><span class="legend-swatch legend-swatch--hit"></span> Match</span>
+        <span class="legend-item"><span class="legend-swatch legend-swatch--partial"></span> Partial</span>
+        <span class="legend-item"><span class="legend-swatch legend-swatch--miss"></span> No match</span>
+        <span class="legend-item"><span class="legend-swatch legend-swatch--unknown"></span> Unknown</span>
+      </footer>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
+  <script src="game.js"></script>
+  <script src="ui.js"></script>
+  <script>
+    initGame();
+  </script>
+</body>
+
+</html>

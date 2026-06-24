@@ -1,0 +1,447 @@
+/* ==========================================================
+   NijiDle — design tokens
+   Near-black broadcast stage; the liver-color swatches supply
+   the accent variety instead of one fixed brand color.
+   ========================================================== */
+
+:root {
+  --bg: #FFF1E7;
+  --bg-raised: #F7F0DC;
+  --text: #3c3744;
+  --text-dim: #78586F;
+  --hit: #5a9367;
+  --partial: #f6e27f;
+  --miss: #f25c54;
+  --unknown: #5a5a6e;
+  --border: #2a2a38;
+
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+.stage {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+  min-height: 100vh;
+}
+
+/* ---------------- Topbar ---------------- */
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 32px;
+}
+
+.brand-mark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 22px;
+  letter-spacing: -0.01em;
+}
+
+.live-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+}
+
+.live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--hit);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot { animation: none; }
+}
+
+/* ---------------- Game shell ---------------- */
+
+.game {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.prompt {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 500;
+  margin: 0;
+  color: var(--text);
+}
+
+/* ---------------- Guess input ---------------- */
+
+.guess-box {
+  position: relative;
+}
+
+#guess-input {
+  width: 100%;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+#guess-input:focus {
+  border-color: var(--hit);
+}
+
+#guess-input:disabled {
+  opacity: 0.5;
+}
+
+.suggestions {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  z-index: 10;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.suggestions.visible {
+  display: block;
+}
+
+.suggestion-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 15px;
+  padding: 12px 16px;
+  cursor: pointer;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover,
+.suggestion-item:focus {
+  background: rgba(255, 61, 110, 0.12);
+}
+
+/* ---------------- End banner ---------------- */
+
+.end-banner {
+  display: none;
+}
+
+.end-banner.visible {
+  display: block;
+}
+
+.end-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--hit);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.end-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.end-sub {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin: 0;
+}
+
+/* ---------------- Board / grid ---------------- */
+
+.board {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-x: auto;
+  /* Gives the scrollbar some breathing room below the rows, and a
+     visual cue (rather than rows butting right up against it). */
+  padding-bottom: 4px;
+}
+
+.empty-state,
+.error-state {
+  padding: 32px 16px;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 14px;
+}
+
+.row {
+  display: grid;
+  /* Fixed minimum widths (not fr units) so columns stop shrinking once
+     they hit a readable floor — at that point the row becomes wider
+     than its container and .board's overflow-x kicks in instead of
+     squeezing 6 columns into a phone screen. The header row uses the
+     same template (see ui.js, which renders it as just another .row
+     inside #board), so header and data columns scroll in sync without
+     needing a separate sticky-header mechanism. */
+  grid-template-columns: 130px 90px 90px 80px 110px 70px;
+  gap: 6px;
+  perspective: 600px;
+  width: max-content;
+  min-width: 100%;
+}
+
+.row--header {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  padding: 0 2px 2px;
+}
+
+.row--newest {
+  animation: slideIn 0.25s ease-out;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row--newest { animation: none; }
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  padding: 12px 6px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  min-height: 48px;
+}
+
+.cell--header {
+  background: none;
+  min-height: auto;
+  padding: 0 6px;
+  justify-content: flex-start;
+}
+
+/* ---------------- Card flip reveal ----------------
+   Used only on freshly submitted guesses (see ui.js / game.js).
+   Restored history and remote guesses render with this class absent,
+   so they appear instantly with no animation.
+
+   The flip rotates the cell on its Y axis; color is plain (the
+   "unrevealed" state) for the first half of the animation, then swaps
+   to the real hit/partial/miss/unknown color at the 90° midpoint —
+   matching the classic Wordle "reveal" look, where the color seems to
+   appear only once the card has fully turned.
+*/
+.cell--flip {
+  animation: cardFlip 0.5s ease-in-out both;
+  animation-delay: var(--flip-delay, 0s);
+  border-width: 1px;
+  border-style: dashed;
+}
+
+@keyframes cardFlip {
+  0% {
+    transform: rotateY(0deg);
+    background: var(--bg-raised);
+    color: var(--text-dim);
+    border-color: transparent;
+  }
+  49% {
+    background: var(--bg-raised);
+    color: var(--text-dim);
+    border-color: transparent;
+  }
+  50% {
+    transform: rotateY(90deg);
+    background: var(--flip-reveal-bg, var(--bg-raised));
+    color: var(--flip-reveal-color, var(--text));
+    border-color: var(--flip-reveal-border, transparent);
+  }
+  100% {
+    transform: rotateY(0deg);
+    background: var(--flip-reveal-bg, var(--bg-raised));
+    color: var(--flip-reveal-color, var(--text));
+    border-color: var(--flip-reveal-border, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Backstop only — ui.js checks this same preference before ever
+     adding the cell--flip class, so this rule shouldn't normally be
+     load-bearing. Kept in case cell--flip is ever applied some other
+     way in the future. */
+  .cell--flip {
+    animation: none;
+  }
+}
+
+.cell--name {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  background: var(--bg-raised);
+  text-align: left;
+  font-weight: 600;
+  border:1px solid var(--border);
+}
+
+.talent-name {
+  font-size: 14px;
+}
+
+.talent-name-jp {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-weight: 400;
+}
+
+.cell--hit {
+  background: var(--hit);
+  color: #fff;
+}
+
+.cell--partial {
+  background: var(--partial);
+  color: #1a1300;
+}
+
+.cell--miss {
+  background: var(--miss);
+  color: var(--text);
+}
+
+.cell--unknown {
+  background: transparent;
+  border: 1px dashed var(--unknown);
+  color: var(--text-dim);
+}
+
+.cell--swatches {
+  gap: 4px;
+}
+
+.swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.arrow {
+  margin-left: 4px;
+  font-weight: 700;
+}
+
+.arrow--up { color: #d7ffe0; }
+.arrow--down { color: #2b1500; }
+
+/* ---------------- Legend ---------------- */
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+.legend-swatch--hit { background: var(--hit); }
+.legend-swatch--partial { background: var(--partial); }
+.legend-swatch--miss { background: var(--miss); }
+.legend-swatch--unknown { background: transparent; border: 1px dashed var(--unknown); }
+
+/* ---------------- Responsive ---------------- */
+
+@media (max-width: 480px) {
+  /* No grid-template-columns override here anymore — the fixed-width
+     columns defined on .row are what makes horizontal scroll work on
+     narrow screens in the first place; shrinking them back down with
+     fr units here would undo that. */
+  .cell {
+    font-size: 12px;
+    padding: 10px 4px;
+  }
+  .talent-name-jp {
+    display: none;
+  }
+}
+
+/* Keyboard focus visibility */
+:focus-visible {
+  outline: 2px solid var(--hit);
+  outline-offset: 2px;
+}

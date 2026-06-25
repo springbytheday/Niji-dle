@@ -11,6 +11,26 @@
     href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap"
     rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+  <script>
+    // Runs before any content paints, so the correct theme is applied
+    // from the very first frame instead of flashing the default (dark)
+    // theme and then switching. The full toggle-button logic lives in
+    // js/theme.js, loaded later — this inline snippet only needs to
+    // set the attribute as early as possible.
+    (function () {
+      try {
+        var saved = localStorage.getItem('nijidle_theme');
+        if (saved === 'dark' || saved === 'light') {
+          document.documentElement.setAttribute('data-theme', saved);
+        }
+        // If nothing saved, leave data-theme unset — the CSS's
+        // prefers-color-scheme media query handles the OS-default case
+        // on its own with no JS needed.
+      } catch (e) {
+        // localStorage unavailable — OS preference via CSS still works.
+      }
+    })();
+  </script>
 </head>
 
 <body>
@@ -19,6 +39,9 @@
       <div class="brand">
         <span class="brand-mark">Niji-Dle</span>
       </div>
+      <button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle light/dark theme">
+        <span id="theme-toggle-icon" aria-hidden="true">&#9788;</span>
+      </button>
     </header>
 
     <main class="game">
@@ -51,6 +74,7 @@
   <script src="supabase-client.js"></script>
   <script src="game.js"></script>
   <script src="ui.js"></script>
+  <script src="theme.js"></script>
   <script>
     initGame();
   </script>

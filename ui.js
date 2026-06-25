@@ -2,7 +2,7 @@ const COLUMNS = [
   { key: 'debutYear', label: 'Debut' },
   { key: 'gender', label: 'Gender' },
   { key: 'species', label: 'Species' },
-  { key: 'birthMonth', label: 'Birth Mo.' },
+ // { key: 'birthMonth', label: 'Birth Mo.' },
   { key: 'liverColor', label: 'Color' },
 ];
 
@@ -75,17 +75,25 @@ function renderRow(guessResult, isNewest, animate) {
     renderCell(col.key, guessResult[col.key], animate ? i : null)
   ).join('');
 
+  const thumbnail = talent.image_url
+  ? `<img class="talent-thumb" src="${escapeHtmlAttr(talent.image_url)}" alt="" loading="lazy" />`
+  : '';
+
+
   return `
     <div class="${rowClass}">
       <div class="cell cell--name">
-        <span class="talent-name">${escapeHtml(talent.name)}</span>
+        ${thumbnail}
+        <div class="talent-name-block">
+          <span class="talent-name">${escapeHtml(talent.name)}</span>
+        </div>
       </div>
       ${cells}
     </div>`;
 }
 
 function renderCell(key, data, flipIndex) {
-  if (key === 'debutYear' || key === 'birthMonth') return renderArrowCell(data, flipIndex);
+  if (key === 'debutYear') return renderArrowCell(data, flipIndex);
   if (key === 'liverColor') return renderLiverColorCell(data, flipIndex);
   return renderTextCell(data, flipIndex);
 }
@@ -165,9 +173,12 @@ function setupAutocomplete() {
 
   input.addEventListener('input', () => {
     const query = input.value.trim().toLowerCase();
-    list.innerHTML = '';
+
     if (!query) {
-      list.classList.remove('visible');
+      // Empty box: same "browse everything" behavior as focusing/clicking
+      // into an empty box, so clearing the text falls back to the full
+      // roster instead of just closing the dropdown.
+      showAllSuggestions(input, list);
       return;
     }
 
@@ -176,27 +187,18 @@ function setupAutocomplete() {
       .filter((t) => !guessedIds.has(t.id))
       .filter((t) => matchesNamePrefix(t.name, query))
       .slice(0, 8);
+    
+    renderSuggestionList(matches, input, list);
 
-    if (matches.length === 0) {
-      list.classList.remove('visible');
-      return;
+  });
+   // Clicking/focusing into an empty box browses the full roster, rather
+  // than requiring the person to type something before seeing any
+  // options. Only triggers when empty — if there's already text, typing
+  // resumed via the `input` listener above takes over as normal.
+  input.addEventListener('focus', () => {
+    if (!input.value.trim()) {
+      showAllSuggestions(input, list);
     }
-
-    matches.forEach((t) => {
-      const item = document.createElement('button');
-      item.type = 'button';
-      item.className = 'suggestion-item';
-      item.textContent = t.name;
-      item.addEventListener('click', () => {
-        submitGuess(t);
-        input.value = '';
-        list.innerHTML = '';
-        list.classList.remove('visible');
-      });
-      list.appendChild(item);
-    });
-
-    list.classList.add('visible');
   });
 
   document.addEventListener('click', (e) => {
@@ -206,6 +208,55 @@ function setupAutocomplete() {
   });
 }
 
+// Shows every not-yet-guessed talent, unfiltered and uncapped — the
+// dropdown's own max-height + overflow-y handles scrolling for however
+// long the list ends up being.
+function showAllSuggestions(input, list) {
+  const guessedIds = new Set(guesses.map((g) => g.talent.id));
+  const allAvailable = allTalents.filter((t) => !guessedIds.has(t.id));
+  renderSuggestionList(allAvailable, input, list);
+}
+
+// Shared rendering for both the filtered (typed) and unfiltered (browse)
+// suggestion lists, so there's only one place building the actual DOM.
+function renderSuggestionList(matches, input, list) {
+  list.innerHTML = '';
+
+  if (matches.length === 0) {
+    list.classList.remove('visible');
+    return;
+  }
+
+  matches.forEach((t) => {
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = 'suggestion-item';
+
+    if (t.image_url) {
+      const thumb = document.createElement('img');
+      thumb.className = 'talent-thumb talent-thumb--suggestion';
+      thumb.src = t.image_url;
+      thumb.alt = '';
+      thumb.loading = 'lazy';
+      item.appendChild(thumb);
+    }
+
+    const label = document.createElement('span');
+    label.textContent = t.name;
+    item.appendChild(label);
+
+    item.addEventListener('click', () => {
+      submitGuess(t);
+      input.value = '';
+      list.innerHTML = '';
+      list.classList.remove('visible');
+    });
+    list.appendChild(item);
+  });
+
+  list.classList.add('visible');
+}
+
 // ----------------------------------------------------------------
 // Helpers
 // ----------------------------------------------------------------
@@ -213,6 +264,19 @@ function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+// For values inserted into an HTML attribute (e.g. an img src URL) where
+// the element-content trick `escapeHtml` uses doesn't apply, and the
+// hex-only `escapeAttr` below would destroy real URL characters like
+// "/", ":", "?", "=". Only escapes what's actually dangerous inside a
+// double-quoted attribute: the quote character itself (plus & and < as
+// a defensive baseline), leaving normal URL characters intact.
+function escapeHtmlAttr(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;');
 }
 
 function escapeAttr(str) {

@@ -26,7 +26,7 @@ function todayKey() {
 // Data loading
 // ----------------------------------------------------------------
 async function loadTalents() {
-  const { data, error } = await db.from('talents').select('*');
+  const { data, error } = await db.from('talents').select('*').order('name');
   if (error) {
     console.error('Failed to load livers:', error);
     showError('Could not load the livers. Check your connection and try again.');
@@ -91,7 +91,7 @@ function compareGuess(guess, answer) {
       guess.hue_family,
       answer.hue_family
     ),
-    birthMonth: compareBirthMonth(guess.bday_month, answer.bday_month),
+    //birthMonth: compareBirthMonth(guess.bday_month, answer.bday_month),
   };
 }
 

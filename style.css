@@ -1,23 +1,85 @@
 /* ==========================================================
    NijiDle — design tokens
-   Near-black broadcast stage; the liver-color swatches supply
-   the accent variety instead of one fixed brand color.
+   Two themes: dark (the original "broadcast stage" look) and
+   light. Defaults to OS preference (prefers-color-scheme), with
+   a manual toggle (sets data-theme on <html>) that always wins
+   over the OS setting once the person has chosen one explicitly.
+
+   Hit/match is intentionally GREEN in both themes — it's the
+   one color that's about game correctness, not theme styling, so
+   it doesn't follow the same light/dark inversion logic as
+   background/text/surfaces. Focus indicators (input focus ring,
+   keyboard outline, win-card border) are a separate neutral blue,
+   since they're generic "this is active" indicators unrelated to
+   whether a guess was correct.
    ========================================================== */
 
 :root {
-  --bg: #FFF1E7;
-  --bg-raised: #F7F0DC;
-  --text: #3c3744;
-  --text-dim: #78586F;
-  --hit: #5a9367;
-  --partial: #f6e27f;
-  --miss: #f25c54;
+  /* Dark theme values, used as the default/fallback regardless of
+     OS preference until overridden below. */
+  --bg: #0d0d14;
+  --bg-raised: #16161f;
+  --text: #f5f3ff;
+  --text-dim: #9a96b3;
+  --hit: #1c9956;
+  --partial: #ffb23d;
+  --miss: #3a3a4a;
   --unknown: #5a5a6e;
   --border: #2a2a38;
+  --focus: #4d8fe0;
 
   --font-display: 'Space Grotesk', sans-serif;
   --font-body: 'Inter', sans-serif;
   --font-mono: 'JetBrains Mono', monospace;
+}
+
+/* OS prefers light, and the person hasn't manually overridden it
+   (no data-theme attribute set yet). */
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    --bg: #f5f4f1;
+    --bg-raised: #ffffff;
+    --text: #1a1a22;
+    --text-dim: #6b6878;
+    --hit: #16753f;
+    --partial: #8f6414;
+    --miss: #c8c5d6;
+    --unknown: #9b97ac;
+    --border: #d6d2de;
+    --focus: #2563eb;
+  }
+}
+
+/* Manual override — wins regardless of OS preference once the person
+   has explicitly chosen a theme via the toggle (see js/theme.js). */
+:root[data-theme='dark'] {
+  --bg: #0d0d14;
+  --bg-raised: #16161f;
+  --text: #f5f3ff;
+  --text-dim: #9a96b3;
+  --hit: #1c9956;
+  --partial: #ffb23d;
+  --miss: #3a3a4a;
+  --unknown: #5a5a6e;
+  --border: #2a2a38;
+  --focus: #4d8fe0;
+}
+
+:root[data-theme='light'] {
+  --bg: #f8fafc;
+  --bg-raised: #ffffff;
+
+  --text: #0f172a;
+  --text-dim: #64748b;
+
+  --hit: #16a34a;
+  --partial: #d97706;
+
+  --miss: #cbd5e1;
+  --unknown: #94a3b8;
+
+  --border: #e2e8f0;
+  --focus: #2563eb;
 }
 
 * {
@@ -30,6 +92,7 @@ body {
   color: var(--text);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .stage {
@@ -55,36 +118,23 @@ body {
   letter-spacing: -0.01em;
 }
 
-.live-pill {
+.theme-toggle {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
   background: var(--bg-raised);
   border: 1px solid var(--border);
   border-radius: 999px;
-  padding: 6px 12px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--text-dim);
+  color: var(--text);
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
-.live-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--hit);
-  animation: pulse 1.6s ease-in-out infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.8); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .live-dot { animation: none; }
+.theme-toggle:hover {
+  border-color: var(--focus);
 }
 
 /* ---------------- Game shell ---------------- */
@@ -123,7 +173,7 @@ body {
 }
 
 #guess-input:focus {
-  border-color: var(--hit);
+  border-color: var(--focus);
 }
 
 #guess-input:disabled {
@@ -150,7 +200,9 @@ body {
 }
 
 .suggestion-item {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   width: 100%;
   text-align: left;
   background: none;
@@ -184,7 +236,7 @@ body {
 
 .end-card {
   background: var(--bg-raised);
-  border: 1px solid var(--hit);
+  border: 1px solid var(--focus);
   border-radius: 10px;
   padding: 16px;
 }
@@ -227,11 +279,11 @@ body {
   /* Fixed minimum widths (not fr units) so columns stop shrinking once
      they hit a readable floor — at that point the row becomes wider
      than its container and .board's overflow-x kicks in instead of
-     squeezing 6 columns into a phone screen. The header row uses the
+     squeezing 5 columns into a phone screen. The header row uses the
      same template (see ui.js, which renders it as just another .row
      inside #board), so header and data columns scroll in sync without
      needing a separate sticky-header mechanism. */
-  grid-template-columns: 130px 90px 90px 80px 110px 70px;
+  grid-template-columns: 160px 90px 80px 120px 70px;
   gap: 6px;
   perspective: 600px;
   width: max-content;
@@ -335,14 +387,34 @@ body {
 }
 
 .cell--name {
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 2px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
   background: var(--bg-raised);
   text-align: left;
   font-weight: 600;
-  border:1px solid var(--border);
+}
+
+.talent-name-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0; /* allows text truncation/wrapping inside a constrained grid column */
+}
+
+.talent-thumb {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--bg);
+}
+
+.talent-thumb--suggestion {
+  width: 28px;
+  height: 28px;
 }
 
 .talent-name {
@@ -442,6 +514,6 @@ body {
 
 /* Keyboard focus visibility */
 :focus-visible {
-  outline: 2px solid var(--hit);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }

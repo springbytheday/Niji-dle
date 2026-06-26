@@ -75,14 +75,15 @@ function renderRow(guessResult, isNewest, animate) {
     renderCell(col.key, guessResult[col.key], animate ? i : null)
   ).join('');
 
-  const thumbnail = talent.image_url
+  const hasImage = Boolean(talent.image_url);
+  const thumbnail = hasImage
   ? `<img class="talent-thumb" src="${escapeHtmlAttr(talent.image_url)}" alt="" loading="lazy" />`
   : '';
-
+  const nameCellClass = hasImage ? 'cell cell--name has-image' : 'cell cell--name'
 
   return `
     <div class="${rowClass}">
-      <div class="cell cell--name">
+      <div class="${nameCellClass}">
         ${thumbnail}
         <div class="talent-name-block">
           <span class="talent-name">${escapeHtml(talent.name)}</span>
@@ -133,8 +134,8 @@ function renderArrowCell(data, flipIndex) {
   const { classes, style } = flipAttrs(data.status, flipIndex);
   const display = data.value == null ? '?' : escapeHtml(String(data.value));
   let arrow = '';
-  if (data.direction === 'up') arrow = '<span class="arrow arrow--up">&uarr;</span>';
-  if (data.direction === 'down') arrow = '<span class="arrow arrow--down">&darr;</span>';
+  if (data.direction === 'up') arrow = '<span class="arrow">&uarr;</span>';
+  if (data.direction === 'down') arrow = '<span class="arrow">&darr;</span>';
   return `<div class="cell ${classes}" style="${style}" data-status="${data.status}">${display}${arrow}</div>`;
 }
 

@@ -286,7 +286,7 @@ body {
      same template (see ui.js, which renders it as just another .row
      inside #board), so header and data columns scroll in sync without
      needing a separate sticky-header mechanism. */
-  grid-template-columns: 160px 90px 80px 120px 70px;
+  grid-template-columns: 160px 90px 90px 120px 70px;
   gap: 6px;
   perspective: 600px;
   width: max-content;
@@ -618,7 +618,7 @@ body {
      narrow screens in the first place; shrinking them back down with
      fr units here would undo that. */
   .row{
-    grid-template-columns: 75px 90px 80px 120px 70px;
+    grid-template-columns: 65px 70px 75px 100px 60px;
   }
   .cell {
     font-size: 12px;

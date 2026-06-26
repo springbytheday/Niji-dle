@@ -28,7 +28,7 @@ function renderBoard(animateFirst = false) {
 
   const header = `
     <div class="row row--header">
-      <div class="cell cell--name">Liver</div>
+      <div class="cell cell--header">Liver</div>
       ${COLUMNS.map((c) => `<div class="cell cell--header">${c.label}</div>`).join('')}
     </div>`;
 

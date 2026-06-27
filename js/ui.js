@@ -225,20 +225,29 @@ function setupAutocomplete() {
   if (!input || !list) return;
 
   input.addEventListener('input', () => {
+    console.log(input);
     const query = input.value.trim().toLowerCase();
+    console.log(query);
 
     if (!query) {
       showAllSuggestions(input, list);
       return;
     }
-
-    const guessedIds = new Set(guesses.map((g) => g.liver.id));
-    const matches = alllivers
+9
+    if (query.includes(" ")) {
+      const matches = alllivers.filter((t) => t.name.toLowerCase().includes(query.toLowerCase()));
+      renderSuggestionList(matches, input, list);
+    }
+    else {
+      const guessedIds = new Set(guesses.map((g) => g.liver.id));
+      const matches = alllivers
       .filter((t) => !guessedIds.has(t.id))
       .filter((t) => matchesNamePrefix(t.name, query))
-      .slice(0, 8);
+        .slice(0, 8);
+      renderSuggestionList(matches, input, list);
+    }
     
-    renderSuggestionList(matches, input, list);
+
 
   });
 
@@ -319,6 +328,7 @@ function escapeAttr(str) {
   return String(str).replace(/[^#a-zA-Z0-9]/g, '');
 }
 
+//Param: Name - answer, Query - guess
 function matchesNamePrefix(name, query) {
   const words = name.toLowerCase().trim().split(/\s+/);
   if (words.length === 0) return false;

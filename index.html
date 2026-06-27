@@ -40,6 +40,9 @@
         <span class="brand-mark">Niji-Dle</span>
       </div>
       <div class="topbar-actions">
+        <button id="info-button" class="icon-button" type="button" aria-label="Information" aria-haspopup="dialog">
+          <span aria-hidden="true">𝒾</span>
+        </button>
         <button id="help-button" class="icon-button" type="button" aria-label="How to play" aria-haspopup="dialog">
           <span aria-hidden="true">?</span>
         </button>
@@ -49,20 +52,39 @@
       </div>
     </header>
 
-    <div id="tutorial-overlay" class="tutorial-overlay">
-      <div id="tutorial-dialog" class="tutorial-dialog" role="dialog" aria-modal="true" aria-labelledby="tutorial-title"
+    <div id="information-overlay" class="overlay-overlay">
+      <div id="information-dialog" class="overlay-dialog" role="dialog" aria-modal="true"
+        aria-labelledby="information-title" tabindex="-1">
+        <button id="information-close" class="overlay-close" type="button" aria-label="Close Information">
+          &times;
+        </button>
+        <h2 id="tutorial-title" class="overlay-title">Information</h2>
+        <p class="overlay-text">
+          Greatly inspired by wordle, loldle, genshindle.
+          </br></br>
+          Data is manually handled and might have errors or inconsistencies. If you notice any mistakes, please
+          fill in our
+          <a class="overlay-link" href="https://forms.gle/bh3GgWXefc9dMcMg7">feedback form here.</a>
+        </p>
+
+        <p class="overlay-text">Thank you to the lovely fans who had helped with gathering the data.</p>
+      </div>
+    </div>
+
+    <div id="tutorial-overlay" class="overlay-overlay">
+      <div id="tutorial-dialog" class="overlay-dialog" role="dialog" aria-modal="true" aria-labelledby="tutorial-title"
         tabindex="-1">
-        <button id="tutorial-close" class="tutorial-close" type="button" aria-label="Close tutorial">
+        <button id="tutorial-close" class="overlay-close" type="button" aria-label="Close tutorial">
           &times;
         </button>
 
-        <h2 id="tutorial-title" class="tutorial-title">How to play Niji-Dle</h2>
+        <h2 id="tutorial-title" class="overlay-title">How to play Niji-Dle</h2>
 
-        <p class="tutorial-text">
+        <p class="overlay-text">
           Try to guess today's Nijisanji liver using the hints provided.
         </p>
 
-        <ul class="tutorial-legend">
+        <ul class="overlay-legend">
           <li>
             <span class="legend-swatch legend-swatch--hit"></span>
             <strong>Match</strong> &mdash; this attribute is exactly right.
@@ -83,11 +105,11 @@
           </li>
         </ul>
 
-        <p class="tutorial-text">
+        <p class="overlay-text">
           For debut year, &uarr; indicates a later year while &darr; indicates an earlier year.
         </p>
 
-        <button id="tutorial-start" class="tutorial-start" type="button">
+        <button id="tutorial-start" class="overlay-start" type="button">
           Got it, let&rsquo;s play
         </button>
       </div>
@@ -136,7 +158,7 @@
   <script src="js/game.js"></script>
   <script src="js/ui.js"></script>
   <script src="js/theme.js"></script>
-  <script src="js/tutorial.js"></script>
+  <script src="js/modal.js"></script>
   <script>
     initGame();
   </script>

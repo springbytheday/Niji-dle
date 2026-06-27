@@ -561,9 +561,9 @@ body {
   margin: 0 auto;
 }
 
-/* ---------------- Tutorial modal ---------------- */
+/* ---------------- Overlay Modal ---------------- */
 
-.tutorial-overlay {
+.overlay-overlay {
   display: none;
   position: fixed;
   inset: 0;
@@ -574,11 +574,11 @@ body {
   padding: 16px;
 }
 
-.tutorial-overlay.visible {
+.overlay-overlay.visible {
   display: flex;
 }
 
-.tutorial-dialog {
+.overlay-dialog {
   position: relative;
   background: var(--bg-raised);
   border: 1px solid var(--border);
@@ -590,14 +590,14 @@ body {
   padding: 28px 24px 24px;
 }
 
-.tutorial-dialog:focus {
+.overlay-dialog:focus {
   outline: none; /* the dialog itself isn't meant to show a visible focus
                      ring — it's a programmatic focus target for screen
                      readers/keyboard users entering the modal, not an
                      interactive element in its own right. */
 }
 
-.tutorial-close {
+.overlay-close {
   position: absolute;
   top: 12px;
   right: 12px;
@@ -615,12 +615,12 @@ body {
   border-radius: 999px;
 }
 
-.tutorial-close:hover {
+.overlay-close:hover {
   background: var(--bg);
   color: var(--text);
 }
 
-.tutorial-title {
+.overlay-title {
   font-family: var(--font-display);
   font-size: 20px;
   font-weight: 700;
@@ -628,14 +628,26 @@ body {
   padding-right: 24px; /* keeps the title from overlapping the close button */
 }
 
-.tutorial-text {
+.overlay-text {
   font-size: 14px;
   line-height: 1.5;
   color: var(--text);
   margin: 0 0 16px;
 }
 
-.tutorial-legend {
+.overlay-link {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--focus);
+  margin: 0 0 16px;
+  text-decoration: none;
+}
+
+.overlay-link:hover{
+  text-decoration: underline;
+}
+
+.overlay-legend {
   list-style: none;
   margin: 0 0 16px;
   padding: 0;
@@ -644,7 +656,7 @@ body {
   gap: 10px;
 }
 
-.tutorial-legend li {
+.overlay-legend li {
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -653,12 +665,12 @@ body {
   color: var(--text);
 }
 
-.tutorial-legend .legend-swatch {
+.overlay-legend .legend-swatch {
   margin-top: 3px; /* nudges the swatch to align with the first line of text */
   flex-shrink: 0;
 }
 
-.tutorial-start {
+.overlay-start {
   width: 100%;
   background: var(--hit);
   color: #fff;
@@ -671,7 +683,7 @@ body {
   cursor: pointer;
 }
 
-.tutorial-start:hover {
+.overlay-start:hover {
   opacity: 0.9;
 }
 

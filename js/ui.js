@@ -68,16 +68,16 @@ function attachFlipEndHandlers(container) {
 }
 
 function renderRow(guessResult, isNewest, animate) {
-  const { talent } = guessResult;
+  const { liver } = guessResult;
   const rowClass = isNewest ? 'row row--newest' : 'row';
 
   const cells = COLUMNS.map((col, i) =>
     renderCell(col.key, guessResult[col.key], animate ? i : null)
   ).join('');
 
-  const hasImage = Boolean(talent.image_url);
+  const hasImage = Boolean(liver.image_url);
   const thumbnail = hasImage
-  ? `<img class="talent-thumb" src="${escapeHtmlAttr(talent.image_url)}" alt="" loading="lazy" />`
+  ? `<img class="liver-thumb" src="${escapeHtmlAttr(liver.image_url)}" alt="" loading="lazy" />`
   : '';
   const nameCellClass = hasImage ? 'cell cell--name has-image' : 'cell cell--name'
 
@@ -85,8 +85,8 @@ function renderRow(guessResult, isNewest, animate) {
     <div class="${rowClass}">
       <div class="${nameCellClass}">
         ${thumbnail}
-        <div class="talent-name-block">
-          <span class="talent-name">${escapeHtml(talent.name)}</span>
+        <div class="liver-name-block">
+          <span class="liver-name">${escapeHtml(liver.name)}</span>
         </div>
       </div>
       ${cells}
@@ -218,12 +218,12 @@ function showEndState() {
   const input = document.getElementById('guess-input');
   if (input) {
     input.disabled = true;
-    input.placeholder = "Today's talent has been found";
+    input.placeholder = "Today's liver has been found";
   }
   if (banner) {
     banner.innerHTML = `
       <div class="end-card">
-        <p class="end-title">It was ${escapeHtml(answerTalent.name)}!</p>
+        <p class="end-title">It was ${escapeHtml(answerliver.name)}!</p>
         <p class="end-sub">Come back tomorrow for a new liver.</p>
         <button id="share-button" class="share-button" type="button">Share results</button>
       </div>`;
@@ -254,8 +254,8 @@ function setupAutocomplete() {
       return;
     }
 
-    const guessedIds = new Set(guesses.map((g) => g.talent.id));
-    const matches = allTalents
+    const guessedIds = new Set(guesses.map((g) => g.liver.id));
+    const matches = alllivers
       .filter((t) => !guessedIds.has(t.id))
       .filter((t) => matchesNamePrefix(t.name, query))
       .slice(0, 8);
@@ -280,12 +280,12 @@ function setupAutocomplete() {
   });
 }
 
-// Shows every not-yet-guessed talent, unfiltered and uncapped — the
+// Shows every not-yet-guessed liver, unfiltered and uncapped — the
 // dropdown's own max-height + overflow-y handles scrolling for however
 // long the list ends up being.
 function showAllSuggestions(input, list) {
-  const guessedIds = new Set(guesses.map((g) => g.talent.id));
-  const allAvailable = allTalents.filter((t) => !guessedIds.has(t.id));
+  const guessedIds = new Set(guesses.map((g) => g.liver.id));
+  const allAvailable = alllivers.filter((t) => !guessedIds.has(t.id));
   renderSuggestionList(allAvailable, input, list);
 }
 
@@ -306,7 +306,7 @@ function renderSuggestionList(matches, input, list) {
 
     if (t.image_url) {
       const thumb = document.createElement('img');
-      thumb.className = 'talent-thumb talent-thumb--suggestion';
+      thumb.className = 'liver-thumb liver-thumb--suggestion';
       thumb.src = t.image_url;
       thumb.alt = '';
       thumb.loading = 'lazy';

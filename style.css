@@ -426,14 +426,14 @@ body {
   font-weight: 600;
 }
 
-.talent-name-block {
+.liver-name-block {
   display: flex;
   flex-direction: column;
   gap: 2px;
   min-width: 0; /* allows text truncation/wrapping inside a constrained grid column */
 }
 
-.talent-thumb {
+.liver-thumb {
   width: 28px;
   height: 28px;
   border-radius: 6px;
@@ -442,16 +442,16 @@ body {
   background: var(--bg);
 }
 
-.talent-thumb--suggestion {
+.liver-thumb--suggestion {
   width: 28px;
   height: 28px;
 }
 
-.talent-name {
+.liver-name {
   font-size: 14px;
 }
 
-.talent-name-jp {
+.liver-name-jp {
   font-size: 11px;
   color: var(--text-dim);
   font-weight: 400;
@@ -686,17 +686,17 @@ body {
     font-size: 11px;
     padding: 8px 3px;
   }
-  .talent-name {
+  .liver-name {
     display: none;
   }
   /* On narrow screens, the name text is visually hidden ONLY for rows
      that actually have a thumbnail (.has-image, added in ui.js) — a
-     talent with no image yet still shows its name, so the cell is
+     liver with no image yet still shows its name, so the cell is
      never left blank. This uses a visually-hidden technique rather
      than display:none, so the name stays in the accessibility tree
      for screen readers even though sighted users only see the
      thumbnail. */
-  .has-image .talent-name-block {
+  .has-image .liver-name-block {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -713,7 +713,7 @@ body {
        positioned), so the cell needs to actively center the remaining
        thumbnail rather than leave space where the text used to be. */
     justify-content: center;
-    /* Establishes a positioning context so .talent-name-block's
+    /* Establishes a positioning context so .liver-name-block's
        position:absolute below is contained within this cell instead
        of anchoring to some unrelated ancestor (.cell--name has no
        position set by default, which would otherwise let it escape). */

@@ -1,11 +1,11 @@
 // game.js
-// Core NijiDle logic: load talent pool, resolve today's answer,
+// Core NijiDle logic: load liver pool, resolve today's answer,
 // compare guesses, render the attribute grid.
 
 const STORAGE_KEY_PREFIX = 'nijidle_progress_';
 
-let allTalents = [];
-let answerTalent = null;
+let alllivers = [];
+let answerliver = null;
 let guesses = [];
 let gameOver = false;
 
@@ -42,8 +42,8 @@ function getPuzzleNumber(dateKey) {
 // ----------------------------------------------------------------
 // Data loading
 // ----------------------------------------------------------------
-async function loadTalents() {
-  const { data, error } = await db.from('talents').select('*').order('name');
+async function loadlivers() {
+  const { data, error } = await db.from('livers').select('*').order('name');
   if (error) {
     console.error('Failed to load livers:', error);
     showError('Could not load the livers. Check your connection and try again.');
@@ -52,11 +52,11 @@ async function loadTalents() {
   return data;
 }
 
-async function resolveDailyAnswer(dateKey, talents) {
+async function resolveDailyAnswer(dateKey, livers) {
   // Look for a precomputed daily_puzzles row first.
   const { data, error } = await db
     .from('daily_puzzles')
-    .select('talent_id')
+    .select('liver_id')
     .eq('puzzle_date', dateKey)
     .maybeSingle();
 
@@ -65,15 +65,15 @@ async function resolveDailyAnswer(dateKey, talents) {
   }
 
   if (data) {
-    return talents.find((t) => t.id === data.talent_id) || null;
+    return livers.find((t) => t.id === data.liver_id) || null;
   }
 
   // Fallback: no row exists for today yet. Deterministically pick one
   // from the date string so it's still stable across reloads/devices,
   // even though it isn't pre-registered in daily_puzzles.
   const seed = hashString(dateKey);
-  const index = seed % talents.length;
-  return talents[index];
+  const index = seed % livers.length;
+  return livers[index];
 }
 
 function hashString(str) {
@@ -98,7 +98,7 @@ function hashString(str) {
 // ----------------------------------------------------------------
 function compareGuess(guess, answer) {
   return {
-    talent: guess,
+    liver: guess,
     debutYear: compareDebutYear(guess.debut_year, answer.debut_year),
     gender: compareExact(guess.gender, answer.gender),
     species: compareSpecies(guess.species, answer.species),
@@ -129,7 +129,7 @@ function compareDebutYear(guessYear, answerYear) {
 // ----------------------------------------------------------------
 // Birth month comparison (linear, like debut year — not cyclical).
 // Stored as a full month name (e.g. "March") rather than a number, with
-// "Unknown" (exact case) as a non-null sentinel for undisclosed talents.
+// "Unknown" (exact case) as a non-null sentinel for undisclosed livers.
 // "Unknown" or any unrecognized text is treated the same as missing
 // data: shown as the 'unknown' status, never counted right or wrong.
 // ----------------------------------------------------------------
@@ -216,7 +216,7 @@ function compareLiverColor(guessColor, answerColor, guessHueFamily, answerHueFam
   if (guessColor.toLowerCase() === answerColor.toLowerCase()) {
     return { status: 'hit', value: guessColor };
   }
-  // hue_family is manually assigned per talent (see supabase_schema.sql)
+  // hue_family is manually assigned per liver (see supabase_schema.sql)
   // rather than computed from the hex value — manual judgment matches
   // fandom/branding color associations more reliably than an automatic
   // HSL-bucket calculation did. Grayscale only matches itself on exact
@@ -236,8 +236,8 @@ function compareLiverColor(guessColor, answerColor, guessHueFamily, answerHueFam
 function saveProgress() {
   const key = STORAGE_KEY_PREFIX + todayKey();
   const payload = {
-    answerId: answerTalent.id,
-    guessIds: guesses.map((g) => g.talent.id),
+    answerId: answerliver.id,
+    guessIds: guesses.map((g) => g.liver.id),
     gameOver,
   };
   try {
@@ -262,23 +262,23 @@ function loadProgress() {
 // Game flow
 // ----------------------------------------------------------------
 async function initGame() {
-  allTalents = await loadTalents();
-  if (allTalents.length === 0) return;
+  alllivers = await loadlivers();
+  if (alllivers.length === 0) return;
 
   const dateKey = todayKey();
-  answerTalent = await resolveDailyAnswer(dateKey, allTalents);
+  answerliver = await resolveDailyAnswer(dateKey, alllivers);
 
-  if (!answerTalent) {
+  if (!answerliver) {
     showError('Could not determine today\u2019s puzzle. Please try again later.');
     return;
   }
 
   const saved = loadProgress();
-  if (saved && saved.answerId === answerTalent.id) {
+  if (saved && saved.answerId === answerliver.id) {
     guesses = saved.guessIds
-      .map((id) => allTalents.find((t) => t.id === id))
+      .map((id) => alllivers.find((t) => t.id === id))
       .filter(Boolean)
-      .map((t) => compareGuess(t, answerTalent));
+      .map((t) => compareGuess(t, answerliver));
     gameOver = saved.gameOver;
   }
 
@@ -290,14 +290,14 @@ async function initGame() {
   }
 }
 
-function submitGuess(talent) {
+function submitGuess(liver) {
   if (gameOver) return;
-  if (guesses.some((g) => g.talent.id === talent.id)) return; // no duplicate guesses
+  if (guesses.some((g) => g.liver.id === liver.id)) return; // no duplicate guesses
 
-  const result = compareGuess(talent, answerTalent);
+  const result = compareGuess(liver, answerliver);
   guesses.unshift(result); // newest guess on top, like a feed
 
-  if (talent.id === answerTalent.id) {
+  if (liver.id === answerliver.id) {
     gameOver = true;
   }
 

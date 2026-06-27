@@ -53,24 +53,37 @@ async function loadlivers() {
 }
 
 async function resolveDailyAnswer(dateKey, livers) {
-  // Look for a precomputed daily_puzzles row first.
-  const { data, error } = await db
-    .from('daily_puzzles')
-    .select('liver_id')
-    .eq('puzzle_date', dateKey)
-    .maybeSingle();
-
+// Calls the get_or_create_daily_puzzle Postgres function (see
+  // supabase_schema.sql), which atomically looks up today's row if it
+  // exists, or picks one and inserts it if this is the first call of
+  // the day. This replaces manually pre-scheduling daily_puzzles rows.
+  const { data, error } = await db.rpc('get_or_create_daily_puzzle', {
+    target_date: dateKey,
+  });
+ 
   if (error) {
-    console.error('Failed to load daily puzzle:', error);
+    console.error('get_or_create_daily_puzzle RPC failed, using local fallback:', error);
+    return resolveDailyAnswerFallback(dateKey, livers);
   }
-
-  if (data) {
-    return livers.find((t) => t.id === data.liver_id) || null;
+ 
+  // Supabase RPC calls returning a `table` result come back as an
+  // array of rows, even though this function only ever returns one row.
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row) {
+    console.error('get_or_create_daily_puzzle returned no row, using local fallback');
+    return resolveDailyAnswerFallback(dateKey, livers);
   }
+ 
+  return livers.find((t) => t.id === row.liver_id) || null;
+}
 
-  // Fallback: no row exists for today yet. Deterministically pick one
-  // from the date string so it's still stable across reloads/devices,
-  // even though it isn't pre-registered in daily_puzzles.
+// Last-resort fallback, only used if the RPC call above fails outright
+// (e.g. network error, function not yet deployed). Picks a talent
+// deterministically from the date so it's at least stable across
+// reloads on THIS device, but does NOT coordinate with daily_puzzles
+// or any no-repeat logic — purely a "don't show a broken page" safety
+// net, not a substitute for the real mechanism above.
+function resolveDailyAnswerFallback(dateKey, livers) {
   const seed = hashString(dateKey);
   const index = seed % livers.length;
   return livers[index];

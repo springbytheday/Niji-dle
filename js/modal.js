@@ -1,15 +1,10 @@
-// tutorial.js
-//
-// Tutorial modal: shows automatically on a person's first-ever visit
-// (tracked via localStorage), and can be reopened any time via the help icon in the header.
-
 const TUTORIAL_STORAGE_KEY = 'nijidle_tutorial_seen';
 
 function hasSeenTutorial() {
   try {
     return localStorage.getItem(TUTORIAL_STORAGE_KEY) === 'true';
   } catch (e) {
-    return false; // localStorage unavailable — treat as "not seen" each time
+    return false;
   }
 }
 
@@ -17,8 +12,6 @@ function markTutorialSeen() {
   try {
     localStorage.setItem(TUTORIAL_STORAGE_KEY, 'true');
   } catch (e) {
-    // Nothing to do — the modal just won't remember being dismissed
-    // across reloads if storage isn't available.
   }
 }
 
@@ -37,9 +30,6 @@ function setupTutorial() {
     lastFocusedElement = document.activeElement;
     overlay.classList.add('visible');
     document.addEventListener('keydown', handleKeydown);
-    // Focus the dialog itself first, which is the conventional initial
-    // focus target for a dialog whose heading is its main content,
-    // rather than jumping straight to a button inside it.
     dialog.focus();
   }
 
@@ -47,9 +37,6 @@ function setupTutorial() {
     overlay.classList.remove('visible');
     document.removeEventListener('keydown', handleKeydown);
     markTutorialSeen();
-    // Return focus to whatever triggered the modal (the help button,
-    // or nothing if it was the automatic first-visit open), rather than
-    // leaving focus lost on a now-hidden element.
     if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
       lastFocusedElement.focus();
     }
@@ -65,8 +52,6 @@ function setupTutorial() {
     }
   }
 
-  // Keeps Tab/Shift+Tab cycling within the dialog's focusable elements
-  // instead of escaping into the page behind the overlay.
   function trapFocus(e) {
     const focusable = dialog.querySelectorAll('button');
     if (focusable.length === 0) return;
@@ -105,9 +90,6 @@ function setupInformation() {
     lastFocusedElement = document.activeElement;
     overlay.classList.add('visible');
     document.addEventListener('keydown', handleKeydown);
-    // Focus the dialog itself first, which is the conventional initial
-    // focus target for a dialog whose heading is its main content,
-    // rather than jumping straight to a button inside it.
     dialog.focus();
   }
 
@@ -115,9 +97,6 @@ function setupInformation() {
     overlay.classList.remove('visible');
     document.removeEventListener('keydown', handleKeydown);
     markTutorialSeen();
-    // Return focus to whatever triggered the modal (the help button,
-    // or nothing if it was the automatic first-visit open), rather than
-    // leaving focus lost on a now-hidden element.
     if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
       lastFocusedElement.focus();
     }
@@ -133,8 +112,6 @@ function setupInformation() {
     }
   }
 
-  // Keeps Tab/Shift+Tab cycling within the dialog's focusable elements
-  // instead of escaping into the page behind the overlay.
   function trapFocus(e) {
     const focusable = dialog.querySelectorAll('button');
     if (focusable.length === 0) return;

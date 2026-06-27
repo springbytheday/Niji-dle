@@ -12,22 +12,14 @@
     rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <script>
-    // Runs before any content paints, so the correct theme is applied
-    // from the very first frame instead of flashing the default (dark)
-    // theme and then switching. The full toggle-button logic lives in
-    // js/theme.js, loaded later — this inline snippet only needs to
-    // set the attribute as early as possible.
+    //To set theme
     (function () {
       try {
         var saved = localStorage.getItem('nijidle_theme');
         if (saved === 'dark' || saved === 'light') {
           document.documentElement.setAttribute('data-theme', saved);
         }
-        // If nothing saved, leave data-theme unset — the CSS's
-        // prefers-color-scheme media query handles the OS-default case
-        // on its own with no JS needed.
       } catch (e) {
-        // localStorage unavailable — OS preference via CSS still works.
       }
     })();
   </script>

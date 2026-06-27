@@ -289,10 +289,10 @@ body {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  overflow-x: auto;
+  //overflow-x: auto;
   /* Gives the scrollbar some breathing room below the rows, and a
      visual cue (rather than rows butting right up against it). */
-  padding-bottom: 4px;
+  //padding-bottom: 4px;
 }
 
 .empty-state,
@@ -312,11 +312,12 @@ body {
      same template (see ui.js, which renders it as just another .row
      inside #board), so header and data columns scroll in sync without
      needing a separate sticky-header mechanism. */
-  grid-template-columns: 160px 90px 90px 120px 70px;
+  //grid-template-columns: 160px 90px 90px 120px 70px;
+  grid-template-columns: 1.5fr 1.7fr 1.5fr 2.3fr 1.3fr;
   gap: 6px;
   perspective: 600px;
-  width: max-content;
-  min-width: 100%;
+  //width: max-content;
+  //min-width: 100%;
 }
 
 .row--header {
@@ -643,12 +644,9 @@ body {
      columns defined on .row are what makes horizontal scroll work on
      narrow screens in the first place; shrinking them back down with
      fr units here would undo that. */
-  .row{
-    grid-template-columns: 65px 70px 75px 100px 60px;
-  }
   .cell {
-    font-size: 12px;
-    padding: 10px 4px;
+    font-size: 11px;
+    padding: 8px 3px;
   }
   .talent-name {
     display: none;

@@ -1,8 +1,7 @@
 // tutorial.js
 //
 // Tutorial modal: shows automatically on a person's first-ever visit
-// (tracked via localStorage, same pattern as theme.js), and can be
-// reopened any time via the help icon in the header.
+// (tracked via localStorage), and can be reopened any time via the help icon in the header.
 
 const TUTORIAL_STORAGE_KEY = 'nijidle_tutorial_seen';
 
@@ -86,14 +85,6 @@ function setupTutorial() {
   helpButton.addEventListener('click', openTutorial);
   closeButton.addEventListener('click', closeTutorial);
   startButton.addEventListener('click', closeTutorial);
-
-  // Clicking the overlay backdrop itself (not the dialog content) also
-  // closes it, a standard modal convention.
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) {
-      closeTutorial();
-    }
-  });
 
   if (!hasSeenTutorial()) {
     openTutorial();

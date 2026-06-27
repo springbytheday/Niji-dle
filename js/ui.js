@@ -10,11 +10,19 @@ function renderBoard(animateFirst = false) {
   const board = document.getElementById('board');
   if (!board) return;
 
-  if (guesses.length === 0) {
-    board.innerHTML = `
+  const base = `
       <div class="empty-state">
         <p>Make your first guess to start the board.</p>
       </div>`;
+  
+  const header = `
+    <div class="row row--header">
+      <div class="cell cell--header">Liver</div>
+      ${COLUMNS.map((c) => `<div class="cell cell--header">${c.label}</div>`).join('')}
+    </div>`;
+
+  if (guesses.length === 0) {
+    board.innerHTML = header + base;
     return;
   }
 
@@ -22,11 +30,7 @@ function renderBoard(animateFirst = false) {
   const shouldAnimate =
     animateFirst && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  const header = `
-    <div class="row row--header">
-      <div class="cell cell--header">Liver</div>
-      ${COLUMNS.map((c) => `<div class="cell cell--header">${c.label}</div>`).join('')}
-    </div>`;
+
 
   const rows = guesses
     .map((g, i) => renderRow(g, i === 0, i === 0 && shouldAnimate))

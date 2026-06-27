@@ -147,23 +147,94 @@ function renderLiverColorCell(data, flipIndex) {
   return `<div class="cell ${classes} cell--swatches" style="${style}" data-status="${data.status}">${swatch}</div>`;
 }
 
+const STATUS_EMOJI = {
+  hit: '🟩',
+  partial: '🟨',
+  miss: '⬛',
+  unknown: '⬜',
+};
+
+function buildEmojiGrid() {
+  // guesses is stored newest-first (see game.js submitGuess); share text
+  // reads top-to-bottom as guess #1 -> final guess, so reverse here.
+  const orderedOldestFirst = [...guesses];
+  return orderedOldestFirst
+    .map((g) => COLUMNS.map((col) => STATUS_EMOJI[g[col.key].status] || '⬜').join(''))
+    .join('\n');
+}
+ 
+function buildShareText() {
+  const puzzleNumber = getPuzzleNumber(todayKey());
+  const guessCount = guesses.length;
+  const guessWord = guessCount === 1 ? 'guess' : 'guesses';
+  const summary = `Niji-Dle #${puzzleNumber} — found in ${guessCount} ${guessWord}`;
+  return `${summary}\n\n${buildEmojiGrid()}\n\nhttps://springbytheday.github.io/Niji-dle/`;
+}
+ 
+async function copyShareText(button) {
+  const text = buildShareText();
+  try {
+    await navigator.clipboard.writeText(text);
+    showCopyFeedback(button, 'Copied!');
+  } catch (e) {
+    // Clipboard API can fail (older browsers, insecure context, denied
+    // permission) — fall back to a manual-select textarea trick rather
+    // than leaving the person with no way to get the text at all.
+    fallbackCopy(text);
+    showCopyFeedback(button, 'Copied!');
+  }
+}
+ 
+function fallbackCopy(text) {
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  try {
+    document.execCommand('copy');
+  } catch (e) {
+    console.error('Fallback copy failed:', e);
+  }
+  document.body.removeChild(textarea);
+}
+ 
+function showCopyFeedback(button, message) {
+  if (!button) return;
+  const original = button.textContent;
+  button.textContent = message;
+  button.disabled = true;
+  setTimeout(() => {
+    button.textContent = original;
+    button.disabled = false;
+  }, 1500);
+}
+
+
+
 function showEndState() {
   const banner = document.getElementById('end-banner');
   const input = document.getElementById('guess-input');
   if (input) {
     input.disabled = true;
-    input.placeholder = "Today's liver has been found";
+    input.placeholder = "Today's talent has been found";
   }
   if (banner) {
     banner.innerHTML = `
       <div class="end-card">
         <p class="end-title">It was ${escapeHtml(answerTalent.name)}!</p>
         <p class="end-sub">Come back tomorrow for a new liver.</p>
+        <button id="share-button" class="share-button" type="button">Share results</button>
       </div>`;
     banner.classList.add('visible');
+ 
+    const shareButton = document.getElementById('share-button');
+    if (shareButton) {
+      shareButton.addEventListener('click', () => copyShareText(shareButton));
+    }
   }
 }
-
 // ----------------------------------------------------------------
 // Autocomplete
 // ----------------------------------------------------------------

@@ -22,6 +22,23 @@ function todayKey() {
   return `${y}-${m}-${d}`;
 }
 
+// Puzzle numbering for shared results (e.g. "NijiDle #12"), counting
+// days since launch — same idea as Wordle's "#1247". Change this single
+// constant when the real launch date is locked in; everything else
+// recalculates automatically. Currently set for testing, NOT the real
+// launch date.
+const LAUNCH_DATE = '2026-06-27'; // TODO: update to the real launch date before going live
+ 
+function getPuzzleNumber(dateKey) {
+  const launch = new Date(LAUNCH_DATE + 'T00:00:00');
+  const current = new Date(dateKey + 'T00:00:00');
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const diffDays = Math.round((current - launch) / msPerDay);
+  // Clamped to 1 so testing before LAUNCH_DATE doesn't show a
+  // nonsensical zero or negative puzzle number.
+  return Math.max(1, diffDays + 1);
+}
+
 // ----------------------------------------------------------------
 // Data loading
 // ----------------------------------------------------------------

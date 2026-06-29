@@ -154,7 +154,7 @@ function buildShareText() {
   const guessCount = guesses.length;
   const guessWord = guessCount === 1 ? 'guess' : 'guesses';
   const summary = `Niji-Dle #${puzzleNumber} — found in ${guessCount} ${guessWord}`;
-  return `${summary}\n\n${buildEmojiGrid()}\n\nhttps://springbytheday.github.io/Niji-dle/`;
+  return `${summary}\n\n${buildEmojiGrid()}\n\nhttps://www.nijidle.com/`;
 }
  
 async function copyShareText(button) {
@@ -194,6 +194,56 @@ function showCopyFeedback(button, message) {
   }, 1500);
 }
 
+let countdownIntervalId = null;
+ 
+function getMsUntilNextLocalMidnight() {
+  const now = new Date();
+  const nextMidnight = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1,
+    0, 0, 0, 0
+  );
+  return nextMidnight - now;
+}
+ 
+function formatCountdown(ms) {
+  const clamped = Math.max(0, ms);
+  const totalSeconds = Math.floor(clamped / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+}
+ 
+function startCountdown() {
+  stopCountdown();
+ 
+  const display = document.getElementById('countdown-display');
+  if (!display) return;
+ 
+  function tick() {
+    const msRemaining = getMsUntilNextLocalMidnight();
+    display.textContent = formatCountdown(msRemaining);
+ 
+    if (msRemaining <= 0) {
+      stopCountdown();
+      window.location.reload(); //reload when hit 00:00
+    }
+  }
+ 
+  tick();
+  countdownIntervalId = setInterval(tick, 1000);
+}
+ 
+function stopCountdown() {
+  if (countdownIntervalId !== null) {
+    clearInterval(countdownIntervalId);
+    countdownIntervalId = null;
+  }
+}
+
 function showEndState() {
   const banner = document.getElementById('end-banner');
   const input = document.getElementById('guess-input');
@@ -205,7 +255,7 @@ function showEndState() {
     banner.innerHTML = `
       <div class="end-card">
         <p class="end-title">It was ${escapeHtml(answerliver.name)}!</p>
-        <p class="end-sub">Come back tomorrow for a new liver.</p>
+        <p class="end-sub">New liver in: <span id="countdown-display" class="countdown-display">00:00:00</span></p>
         <button id="share-button" class="share-button" type="button">Share results</button>
       </div>`;
     banner.classList.add('visible');
@@ -214,6 +264,8 @@ function showEndState() {
     if (shareButton) {
       shareButton.addEventListener('click', () => copyShareText(shareButton));
     }
+    
+    startCountdown();
   }
 }
 // ----------------------------------------------------------------

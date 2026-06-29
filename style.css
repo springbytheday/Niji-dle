@@ -241,6 +241,13 @@ body {
   color: var(--text-dim);
   margin: 0 0 12px;
 }
+
+.countdown-display {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
  
 .share-button {
   background: var(--hit);

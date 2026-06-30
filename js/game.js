@@ -166,7 +166,7 @@ const SPECIES_STOPWORDS = new Set(['half', 'born', 'quarter', 'part', 'and', 'th
 function tokenizeSpecies(str) {
   return str
     .toLowerCase()
-    .split(/[\s-]+/)
+    .split(/[\s,-]+/)
     .map((w) => w.trim())
     .filter((w) => w.length > 0 && !SPECIES_STOPWORDS.has(w));
 }
@@ -180,6 +180,8 @@ function compareSpecies(guessVal, answerVal) {
   }
   const guessTokens = new Set(tokenizeSpecies(guessVal));
   const answerTokens = new Set(tokenizeSpecies(answerVal));
+  console.log(guessTokens);
+  console.log(answerTokens);
   const sharesWord = [...guessTokens].some((t) => answerTokens.has(t));
   return { status: sharesWord ? 'partial' : 'miss', value: guessVal };
 }

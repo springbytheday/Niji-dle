@@ -242,6 +242,13 @@ body {
   margin: 0 0 12px;
 }
 
+.end-link{
+  font-size: 14px;
+  color: var(--focus);
+  margin: 0 0 12px;
+  font-family: var(--font-display);
+}
+
 .countdown-display {
   font-family: var(--font-mono);
   font-weight: 700;
@@ -262,7 +269,7 @@ body {
   transition: opacity 0.15s ease;
   display: block;
   width: fit-content;
-  margin: 0 auto;
+  margin: 0 auto 12px auto;
 }
  
 .share-button:hover:not(:disabled) {

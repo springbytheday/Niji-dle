@@ -101,9 +101,6 @@ function compareGuess(guess, answer) {
 }
 
 function compareDebutYear(guessYear, answerYear) {
-  if (guessYear == null || answerYear == null) {
-    return { status: 'unknown', direction: null, value: guessYear };
-  }
   if (guessYear === answerYear) {
     return { status: 'hit', direction: null, value: guessYear };
   }
@@ -129,15 +126,9 @@ function monthNameToNumber(name) {
 }
 
 function compareBirthMonth(guessVal, answerVal) {
-  if (guessVal == null || answerVal == null) {
-    return { status: 'unknown', direction: null, value: guessVal };
-  }
   const guessNum = monthNameToNumber(guessVal);
   const answerNum = monthNameToNumber(answerVal);
 
-  if (guessNum == null || answerNum == null) {
-    return { status: 'unknown', direction: null, value: guessVal };
-  }
   if (guessNum === answerNum) {
     return { status: 'hit', direction: null, value: guessVal };
   }
@@ -149,9 +140,6 @@ function compareBirthMonth(guessVal, answerVal) {
 }
 
 function compareExact(guessVal, answerVal) {
-  if (guessVal == null || answerVal == null) {
-    return { status: 'unknown', value: guessVal };
-  }
   return {
     status: guessVal === answerVal ? 'hit' : 'miss',
     value: guessVal,
@@ -172,9 +160,6 @@ function tokenizeSpecies(str) {
 }
 
 function compareSpecies(guessVal, answerVal) {
-  if (guessVal == null || answerVal == null) {
-    return { status: 'unknown', value: guessVal };
-  }
   if (guessVal.toLowerCase() === answerVal.toLowerCase()) {
     return { status: 'hit', value: guessVal };
   }
@@ -191,9 +176,6 @@ function compareSpecies(guessVal, answerVal) {
 // ----------------------------------------------------------------
 
 function compareLiverColor(guessColor, answerColor, guessHueFamily, answerHueFamily) {
-  if (guessColor == null || answerColor == null) {
-    return { status: 'unknown', value: guessColor };
-  }
   if (guessColor.toLowerCase() === answerColor.toLowerCase()) {
     return { status: 'hit', value: guessColor };
   }

@@ -102,7 +102,6 @@ function flipAttrs(status, flipIndex) {
     hit: { bg: 'var(--hit)', color: '#fff', border: 'transparent' },
     partial: { bg: 'var(--partial)', color: '#1a1300', border: 'transparent' },
     miss: { bg: 'var(--miss)', color: 'var(--text)', border: 'transparent' },
-    unknown: { bg: 'transparent', color: 'var(--text-dim)', border: 'var(--unknown)' },
   }[status];
 
   const style = `--flip-delay:${delayMs}ms; --flip-reveal-bg: ${reveal.bg}; --flip-reveal-color: ${reveal.color}; --flip-reveal-border: ${reveal.border};`;
@@ -139,7 +138,6 @@ const STATUS_EMOJI = {
   hit: '🟩',
   partial: '🟨',
   miss: '⬛',
-  unknown: '⬜',
 };
 
 function buildEmojiGrid() {

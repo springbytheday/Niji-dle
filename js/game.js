@@ -198,7 +198,7 @@ function saveProgress() {
     gameOver,
   };
   try {
-    sessionStorage.setItem(key, JSON.stringify(payload));
+    localStorage.setItem(key, JSON.stringify(payload));
   } catch (e) {
     console.warn('Could not persist progress:', e);
   }
@@ -207,7 +207,7 @@ function saveProgress() {
 function loadProgress() {
   const key = STORAGE_KEY_PREFIX + todayKey();
   try {
-    const raw = sessionStorage.getItem(key);
+    const raw = localStorage.getItem(key);
     if (!raw) return null;
     return JSON.parse(raw);
   } catch (e) {

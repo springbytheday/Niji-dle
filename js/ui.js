@@ -30,8 +30,6 @@ function renderBoard(animateFirst = false) {
   const shouldAnimate =
     animateFirst && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-
-
   const rows = guesses
     .map((g, i) => renderRow(g, i === 0, i === 0 && shouldAnimate))
     .join('');
@@ -247,9 +245,12 @@ function showEndState() {
   const input = document.getElementById('guess-input');
   if (input) {
     input.disabled = true;
-    input.placeholder = "Today's liver has been found";
+    input.placeholder = currentMode === 'daily' ? "Today's liver has been found" : "You've found the liver";
   }
-  if (banner) {
+
+  if (!banner) return;
+
+  if (currentMode === 'daily') {
     banner.innerHTML = `
       <div class="end-card">
         <p class="end-title">It was ${escapeHtml(answerliver.name)}!</p>
@@ -266,7 +267,68 @@ function showEndState() {
     
     startCountdown();
   }
+  else {
+    // Unlimited mode — no countdown or share, just a play-again button
+    banner.innerHTML = `
+      <div class="end-card">
+        <p class="end-title">It was ${escapeHtml(answerliver.name)}!</p>
+        <p class="end-sub">Want to go again?</p>
+        <button id="play-again-button" class="share-button" type="button">Play again</button>
+      </div>`;
+    banner.classList.add('visible');
+
+    const playAgainButton = document.getElementById('play-again-button');
+    if (playAgainButton) {
+      playAgainButton.addEventListener('click', () => {
+        banner.classList.remove('visible');
+        banner.innerHTML = '';
+        input.disabled = false;
+        input.placeholder = "Type a liver name...";
+        newUnlimitedRound();
+      });
+    }
+  }
 }
+
+// ----------------------------------------------------------------
+// Modes
+// ----------------------------------------------------------------
+
+// Updates the mode toggle tabs to reflect which mode is currently active.
+// Called by switchMode() in game.js whenever the mode changes.
+function updateModeToggle(mode) {
+  const dailyTab = document.getElementById('mode-daily');
+  const unlimitedTab = document.getElementById('mode-unlimited');
+  if (dailyTab && unlimitedTab) {
+    dailyTab.classList.toggle('mode-tab--active', mode === 'daily');
+    dailyTab.setAttribute('aria-selected', mode === 'daily' ? 'true' : 'false');
+    unlimitedTab.classList.toggle('mode-tab--active', mode === 'unlimited');
+    unlimitedTab.setAttribute('aria-selected', mode === 'unlimited' ? 'true' : 'false');
+  }
+
+  const prompt = document.getElementById('game-prompt');
+  if (prompt) {
+    prompt.textContent = mode === 'daily'
+      ? 'Guess today\u2019s Nijisanji liver'
+      : 'Guess any Nijisanji liver';
+  }
+
+  // Clear the end-banner and stop the countdown when switching modes,
+  // so a won daily board doesn't leave a frozen end-card when you
+  // switch to unlimited (and vice versa).
+  const banner = document.getElementById('end-banner');
+  if (banner) {
+    banner.classList.remove('visible');
+    banner.innerHTML = '';
+  }
+  const input = document.getElementById('guess-input');
+  if (input && mode === 'unlimited') {
+    input.disabled = false;
+    input.placeholder = "Type a liver name...";
+  }
+  stopCountdown();
+}
+
 // ----------------------------------------------------------------
 // Autocomplete
 // ----------------------------------------------------------------

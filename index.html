@@ -125,6 +125,13 @@
     </div>
 
     <main class="game">
+      <div class="mode-tabs" role="tablist">
+        <button id="mode-daily" class="mode-tab mode-tab--active" role="tab" aria-selected="true" type="button"
+          onclick="switchMode('daily')">Daily</button>
+        <button id="mode-unlimited" class="mode-tab" role="tab" aria-selected="false" type="button"
+          onclick="switchMode('unlimited')">Unlimited</button>
+      </div>
+
       <p class="prompt">Guess today&rsquo;s Nijisanji liver</p>
 
       <div class="guess-box">

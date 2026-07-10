@@ -1,11 +1,13 @@
 // Game logic: load liver pool, resolve today's answer, compare guesses, render the attribute grid.
 
 const STORAGE_KEY_PREFIX = 'nijidle_progress_';
+const UNLIMITED_STORAGE_KEY = 'nijidle_unlimited';
 
 let alllivers = [];
 let answerliver = null;
 let guesses = [];
 let gameOver = false;
+let currentMode = 'daily'; 
 
 // ----------------------------------------------------------------
 // Date handling — the daily puzzle resets at local midnight.
@@ -78,6 +80,11 @@ async function resolveDailyAnswer(dateKey, livers) {
 function resolveDailyAnswerFallback(dateKey, livers) {
   const seed = hashString(dateKey);
   const index = seed % livers.length;
+  return livers[index];
+}
+
+function resolveUnlimitedAnswer(livers) {
+  const index = Math.floor(Math.random() * livers.length);
   return livers[index];
 }
 
@@ -206,8 +213,13 @@ function saveProgress() {
     guessIds: guesses.map((g) => g.liver.id),
     gameOver,
   };
-  try {
-    localStorage.setItem(key, JSON.stringify(payload));
+try {
+    if (currentMode === 'daily') {
+      const key = STORAGE_KEY_PREFIX + todayKey();
+      localStorage.setItem(key, JSON.stringify(payload));
+    } else {
+      localStorage.setItem(UNLIMITED_STORAGE_KEY, JSON.stringify(payload));
+    }
   } catch (e) {
     console.warn('Could not persist progress:', e);
   }
@@ -224,6 +236,49 @@ function loadProgress() {
   }
 }
 
+function loadUnlimitedProgress() {
+  try {
+    const raw = localStorage.getItem(UNLIMITED_STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    return null;
+  }
+}
+
+function clearUnlimitedProgress() {
+  try {
+    localStorage.removeItem(UNLIMITED_STORAGE_KEY);
+  } catch (e) {
+    // Non-critical
+  }
+}
+
+// ----------------------------------------------------------------
+// Clears old daily mode progress data
+// ----------------------------------------------------------------
+function cleanupStaleProgress() {
+  try {
+    const todayPrefix = STORAGE_KEY_PREFIX + todayKey();
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (
+        k &&
+        k.startsWith(STORAGE_KEY_PREFIX) &&
+        k !== todayPrefix &&
+        k !== UNLIMITED_STORAGE_KEY
+      ) {
+        keysToRemove.push(k);
+      }
+    }
+    keysToRemove.forEach((k) => localStorage.removeItem(k));
+  } catch (e) {
+    // Non-critical
+  }
+}
+
+
 // ----------------------------------------------------------------
 // Game flow
 // ----------------------------------------------------------------
@@ -233,30 +288,86 @@ async function initGame() {
 
   preloadTalentImages(alllivers);
 
-  const dateKey = todayKey();
-  answerliver = await resolveDailyAnswer(dateKey, alllivers);
+  preloadTalentImages(alllivers);
 
-  if (!answerliver) {
-    showError('Could not determine today\u2019s puzzle. Please try again later.');
-    return;
-  }
-
-  const saved = loadProgress();
-  if (saved && saved.answerId === answerliver.id) {
-    guesses = saved.guessIds
-      .map((id) => alllivers.find((t) => t.id === id))
-      .filter(Boolean)
-      .map((t) => compareGuess(t, answerliver));
-    gameOver = saved.gameOver;
-  }
-
-  renderBoard();
+  await switchMode('daily', true);
   setupAutocomplete();
+}
+
+async function switchMode(mode, isInitialLoad = false) {
+  currentMode = mode;
+  guesses = [];
+  gameOver = false;
+  answerliver = null;
+
+  updateModeToggle(mode);
+
+  if (mode === 'daily') {
+    const dateKey = todayKey();
+    answerliver = await resolveDailyAnswer(dateKey, alllivers);
+
+    if (!answerliver) {
+      showError('Could not determine today\u2019s puzzle. Please try again later.');
+      return;
+    }
+
+    // Restore saved daily progress (guesses made earlier today).
+    const saved = loadProgress();
+    if (saved && saved.answerId === answerliver.id) {
+      guesses = saved.guessIds
+        .map((id) => alllivers.find((t) => t.id === id))
+        .filter(Boolean)
+        .map((t) => compareGuess(t, answerliver));
+      gameOver = saved.gameOver;
+    }
+  } else {
+    // Unlimited: restore a saved in-progress round if one exists,
+    // otherwise pick a fresh random liver.
+    const savedUnlimited = loadUnlimitedProgress();
+    if (savedUnlimited) {
+      const savedAnswer = alllivers.find((t) => t.id === savedUnlimited.answerId);
+      if (savedAnswer) {
+        answerliver = savedAnswer;
+        guesses = savedUnlimited.guessIds
+          .map((id) => alllivers.find((t) => t.id === id))
+          .filter(Boolean)
+          .map((t) => compareGuess(t, answerliver));
+        gameOver = savedUnlimited.gameOver;
+      } else {
+        // Saved liver no longer in active roster (e.g. was deactivated)
+        // — start fresh rather than restoring a broken state.
+        clearUnlimitedProgress();
+        answerliver = resolveUnlimitedAnswer(alllivers);
+      }
+    } else {
+      answerliver = resolveUnlimitedAnswer(alllivers);
+    }
+  }
+
+  stopCountdown();
+  renderBoard();
+
+  if (!isInitialLoad) {
+    setupAutocomplete();
+  }
 
   if (gameOver) {
     showEndState();
   }
 }
+
+// ----------------------------------------------------------------
+// Unlimited Mode
+// ----------------------------------------------------------------
+function newUnlimitedRound() {
+  clearUnlimitedProgress();
+  guesses = [];
+  gameOver = false;
+  answerliver = resolveUnlimitedAnswer(alllivers);
+  renderBoard();
+  setupAutocomplete();
+}
+
 
 function submitGuess(liver) {
   if (gameOver) return;

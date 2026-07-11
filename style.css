@@ -207,7 +207,8 @@ body {
 }
 
 .suggestion-item:hover,
-.suggestion-item:focus {
+.suggestion-item:focus,
+.suggestion-item--highlighted {
   background: rgba(255, 61, 110, 0.12);
 }
 

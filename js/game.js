@@ -44,6 +44,15 @@ async function loadlivers() {
   return data;
 }
 
+function preloadTalentImages(livers) {
+  livers.forEach((l) => {
+    if (l.image_url) {
+      const img = new Image();
+      img.src = l.image_url;
+    }
+  });
+}
+
 async function resolveDailyAnswer(dateKey, livers) {
   const { data, error } = await db.rpc('get_or_create_daily_puzzle', {
     target_date: dateKey,
@@ -221,6 +230,8 @@ function loadProgress() {
 async function initGame() {
   alllivers = await loadlivers();
   if (alllivers.length === 0) return;
+
+  preloadTalentImages(alllivers);
 
   const dateKey = todayKey();
   answerliver = await resolveDailyAnswer(dateKey, alllivers);

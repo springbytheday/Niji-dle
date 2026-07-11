@@ -275,31 +275,82 @@ function setupAutocomplete() {
   const list = document.getElementById('suggestions');
   if (!input || !list) return;
 
+  let highlightedIndex = -1; //nothing is highlighted
+
+  function getItems() {
+    return Array.from(list.querySelectorAll('.suggestion-item'));
+  }
+
+   function setHighlight(index) {
+    const items = getItems();
+    if (items.length === 0) return;
+ 
+    // Clamp to valid range, wrapping around at the ends
+    if (index < 0) index = items.length - 1;
+    if (index >= items.length) index = 0;
+ 
+    items.forEach((item, i) => {
+      item.classList.toggle('suggestion-item--highlighted', i === index);
+      if (i === index) {
+        // Scroll the highlighted item into view if the list is scrollable
+        item.scrollIntoView({ block: 'nearest' });
+      }
+    });
+    highlightedIndex = index;
+  }
+ 
+  function clearHighlight() {
+    getItems().forEach((item) => item.classList.remove('suggestion-item--highlighted'));
+    highlightedIndex = -1;
+  }
+ 
+  function selectHighlighted() {
+    const items = getItems();
+    if (highlightedIndex >= 0 && highlightedIndex < items.length) {
+      items[highlightedIndex].click();
+    } else if (items.length > 0) {
+      // No item highlighted — Enter selects the first match
+      items[0].click();
+    }
+  }
+
+    input.addEventListener('keydown', (e) => {
+    const isOpen = list.classList.contains('visible');
+ 
+    if (e.key === 'ArrowDown') {
+      e.preventDefault(); // stop the cursor jumping to end of input
+      if (!isOpen) return;
+      setHighlight(highlightedIndex + 1);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!isOpen) return;
+      setHighlight(highlightedIndex - 1);
+    } else if (e.key === 'Enter') {
+      if (!isOpen) return;
+      e.preventDefault();
+      selectHighlighted();
+    } else if (e.key === 'Escape') {
+      list.classList.remove('visible');
+      clearHighlight();
+    }
+  });
+
   input.addEventListener('input', () => {
-    console.log(input);
+    clearHighlight();
     const query = input.value.trim().toLowerCase();
-    console.log(query);
 
     if (!query) {
       showAllSuggestions(input, list);
       return;
     }
 9
-    if (query.includes(" ")) {
-      const matches = alllivers.filter((t) => t.name.toLowerCase().includes(query.toLowerCase()));
-      renderSuggestionList(matches, input, list);
-    }
-    else {
-      const guessedIds = new Set(guesses.map((g) => g.liver.id));
-      const matches = alllivers
+    const guessedIds = new Set(guesses.map((g) => g.liver.id));
+    const matches = alllivers
       .filter((t) => !guessedIds.has(t.id))
       .filter((t) => matchesNamePrefix(t.name, query))
-        .slice(0, 8);
-      renderSuggestionList(matches, input, list);
-    }
-    
-
-
+      .slice(0, 8);
+ 
+    renderSuggestionList(matches, input, list);
   });
 
   input.addEventListener('focus', () => {
@@ -311,6 +362,7 @@ function setupAutocomplete() {
   document.addEventListener('click', (e) => {
     if (!list.contains(e.target) && e.target !== input) {
       list.classList.remove('visible');
+      clearHighlight();
     }
   });
 }

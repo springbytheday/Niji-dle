@@ -286,7 +286,6 @@ async function initGame() {
   alllivers = await loadlivers();
   if (alllivers.length === 0) return;
 
-  preloadTalentImages(alllivers);
 
   preloadTalentImages(alllivers);
 

@@ -181,8 +181,6 @@ function compareSpecies(guessVal, answerVal) {
   }
   const guessTokens = new Set(tokenizeSpecies(guessVal));
   const answerTokens = new Set(tokenizeSpecies(answerVal));
-  console.log(guessTokens);
-  console.log(answerTokens);
   const sharesWord = [...guessTokens].some((t) => answerTokens.has(t));
   return { status: sharesWord ? 'partial' : 'miss', value: guessVal };
 }
@@ -207,7 +205,6 @@ function compareLiverColor(guessColor, answerColor, guessHueFamily, answerHueFam
 // Local progress persistence (per-day, so refreshing doesn't lose state)
 // ----------------------------------------------------------------
 function saveProgress() {
-  const key = STORAGE_KEY_PREFIX + todayKey();
   const payload = {
     answerId: answerliver.id,
     guessIds: guesses.map((g) => g.liver.id),
@@ -375,8 +372,10 @@ function submitGuess(liver) {
   const result = compareGuess(liver, answerliver);
   guesses.unshift(result); // newest guess on top, like a feed
 
+
   if (liver.id === answerliver.id) {
     gameOver = true;
+    recordWin(guesses.length);
   }
 
   saveProgress();
@@ -392,4 +391,99 @@ function showError(message) {
   if (board) {
     board.innerHTML = `<p class="error-state">${message}</p>`;
   }
+}
+// ----------------------------------------------------------------
+// Unlimited Mode - Stats
+// ----------------------------------------------------------------
+
+const STATS_KEYS = {
+  daily:     'nijidle_stats_daily',
+  unlimited: 'nijidle_stats_unlimited',
+};
+
+function defaultStats(mode) {
+  const base = {
+    totalWins: 0,
+    currentStreak: 0,
+    bestStreak: 0,
+    totalGuessesOnWins: 0,
+  };
+  if (mode === 'daily') {
+    // Daily needs date tracking for skip-a-day streak detection
+    base.totalPlayed = 0;
+    base.lastSolvedDate = null; // 'YYYY-MM-DD' of the most recent solved day
+  }
+  return base;
+}
+
+function loadStats(mode) {
+  try {
+    const raw = localStorage.getItem(STATS_KEYS[mode]);
+    if (!raw) return defaultStats(mode);
+    return { ...defaultStats(mode), ...JSON.parse(raw) };
+  } catch (e) {
+    return defaultStats(mode);
+  }
+}
+ 
+function saveStats(mode, stats) {
+  try {
+    localStorage.setItem(STATS_KEYS[mode], JSON.stringify(stats));
+  } catch (e) {
+    console.warn('Could not save stats:', e);
+  }
+}
+ 
+function recordWin(guessCount) {
+  const mode = currentMode;
+  const stats = loadStats(mode);
+ 
+  if (mode === 'daily') {
+    const today = todayKey();
+    const yesterday = getPreviousDay(today);
+ 
+    // Guard against double-counting if the page is reloaded after solving
+    if (stats.lastSolvedDate === today) return;
+ 
+    stats.totalPlayed += 1;
+    stats.totalWins += 1;
+    stats.totalGuessesOnWins += guessCount;
+ 
+    // Streak continues only if the last solved day was yesterday.
+    // Otherwise it's been skipped — reset to 1.
+    if (stats.lastSolvedDate === yesterday) {
+      stats.currentStreak += 1;
+    } else {
+      stats.currentStreak = 1;
+    }
+ 
+    stats.bestStreak = Math.max(stats.bestStreak, stats.currentStreak);
+    stats.lastSolvedDate = today;
+  } else {
+    // Unlimited: no loss condition, streak only ever grows
+    stats.totalWins += 1;
+    stats.currentStreak += 1;
+    stats.bestStreak = Math.max(stats.bestStreak, stats.currentStreak);
+    stats.totalGuessesOnWins += guessCount;
+  }
+ 
+  saveStats(mode, stats);
+}
+ 
+// Returns 'YYYY-MM-DD' for the calendar day before the given dateKey
+function getPreviousDay(dateKey) {
+  const d = new Date(dateKey + 'T00:00:00');
+  d.setDate(d.getDate() - 1);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+ 
+function getStats(mode) {
+  const stats = loadStats(mode);
+  const avg = stats.totalWins > 0
+    ? (stats.totalGuessesOnWins / stats.totalWins).toFixed(1)
+    : '—';
+  return { ...stats, averageGuesses: avg };
 }

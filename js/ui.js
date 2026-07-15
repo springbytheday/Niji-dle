@@ -250,6 +250,8 @@ function showEndState() {
 
   if (!banner) return;
 
+const stats = getStats(currentMode);
+
   if (currentMode === 'daily') {
     banner.innerHTML = `
       <div class="end-card">
@@ -257,7 +259,8 @@ function showEndState() {
         <p class="end-sub">New liver in: <span id="countdown-display" class="countdown-display">00:00:00</span></p>
         <button id="share-button" class="share-button" type="button">Share results</button>
         <a class="end-link" href="https://forms.gle/pbkSTggPu1ghMwae8">Share some fun facts about your fav livers~</a>
-      </div>`;
+      </div>
+      ${renderStatsBlock(stats, 'daily')}`;;
     banner.classList.add('visible');
  
     const shareButton = document.getElementById('share-button');
@@ -274,7 +277,8 @@ function showEndState() {
         <p class="end-title">It was ${escapeHtml(answerliver.name)}!</p>
         <p class="end-sub">Want to go again?</p>
         <button id="play-again-button" class="share-button" type="button">Play again</button>
-      </div>`;
+      </div>
+      ${renderStatsBlock(stats, 'unlimited')}`;
     banner.classList.add('visible');
 
     const playAgainButton = document.getElementById('play-again-button');
@@ -288,6 +292,30 @@ function showEndState() {
       });
     }
   }
+}
+
+
+// Builds the stats block HTML for both modes.
+// Returns an HTML string injected inline below the end-card.
+function renderStatsBlock(stats, mode) {
+  const avg = stats.averageGuesses;
+  const rows = [
+    { label: 'Current Streak', value: stats.currentStreak },
+    { label: 'Best Streak', value: stats.bestStreak },
+    { label: 'Wins', value: stats.totalWins },
+    { label: 'Avg Guesses', value: avg },
+  ];
+  if (mode === 'daily') {
+    rows.splice(2, 0, { label: 'Played', value: stats.totalPlayed });
+  }
+ 
+  const cells = rows.map((r) => `
+    <div class="stats-cell">
+      <span class="stats-value">${escapeHtml(String(r.value))}</span>
+      <span class="stats-label">${escapeHtml(r.label)}</span>
+    </div>`).join('');
+ 
+  return `<div class="stats-block">${cells}</div>`;
 }
 
 // ----------------------------------------------------------------

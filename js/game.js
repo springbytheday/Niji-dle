@@ -165,7 +165,7 @@ function compareExact(guessVal, answerVal) {
 // ----------------------------------------------------------------
 // Species comparison 
 // ----------------------------------------------------------------
-const SPECIES_STOPWORDS = new Set(['half', 'born', 'quarter', 'part', 'and', 'the', 'a']);
+const SPECIES_STOPWORDS = new Set(['half', 'born', 'quarter', 'part', 'and', 'the', 'a','beings']);
 
 function tokenizeSpecies(str) {
   return str
@@ -188,16 +188,36 @@ function compareSpecies(guessVal, answerVal) {
 // ----------------------------------------------------------------
 // Color comparison
 // ----------------------------------------------------------------
+const COLOUR_NEIGHBOURS = {
+  red:     ['orange', 'pink'],
+  orange:  ['red', 'cream'],
+  cream:   ['orange', 'yellow'],
+  yellow:  ['cream', 'green'],
+  green:   ['yellow', 'teal'],
+  teal:    ['green', 'blue'],
+  blue:    ['teal', 'purple'],
+  purple:  ['blue', 'magenta'],
+  magenta: ['purple', 'pink'],
+  pink:    ['magenta', 'red'],
+  // Achromatics are all neighbours of each other
+  white:   ['grey', 'black'],
+  grey:    ['white', 'black'],
+  black:   ['white', 'grey'],
+};
+
+function areColourNeighbours(familyA, familyB) {
+  const neighbours = COLOUR_NEIGHBOURS[familyA.toLowerCase()];
+  return neighbours ? neighbours.includes(familyB.toLowerCase()) : false;
+}
 
 function compareLiverColor(guessColor, answerColor, guessHueFamily, answerHueFamily) {
   if (guessColor.toLowerCase() === answerColor.toLowerCase()) {
     return { status: 'hit', value: guessColor };
   }
-  if (
-    guessHueFamily.toLowerCase() === answerHueFamily.toLowerCase()
-  ) {
-    return { status: 'partial', value: guessColor };
-  }
+  const g = guessHueFamily.toLowerCase();
+  const a = answerHueFamily.toLowerCase();
+  if (g === a) return { status: 'hit', value: guessColor };
+  if (areColourNeighbours(g, a)) return { status: 'partial', value: guessColor };
   return { status: 'miss', value: guessColor };
 }
 

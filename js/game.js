@@ -165,12 +165,12 @@ function compareExact(guessVal, answerVal) {
 // ----------------------------------------------------------------
 // Species comparison 
 // ----------------------------------------------------------------
-const SPECIES_STOPWORDS = new Set(['half', 'born', 'quarter', 'part', 'and', 'the', 'a','beings']);
+const SPECIES_STOPWORDS = new Set(['half', 'born', 'quarter', 'part', 'and', 'the', 'a','being']);
 
 function tokenizeSpecies(str) {
   return str
     .toLowerCase()
-    .split(/[\s,-]+/)
+    .split(/[\s,:\-]+/)
     .map((w) => w.trim())
     .filter((w) => w.length > 0 && !SPECIES_STOPWORDS.has(w));
 }

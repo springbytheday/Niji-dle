@@ -1,4 +1,4 @@
-const ANNOUNCEMENT_MESSAGE = 'Color rework, unlimited mode and species categorization has been updated. Check out information(i) icon for more details.'; // ← edit or set to null to hide
+const ANNOUNCEMENT_MESSAGE = 'Color rework, unlimited mode and species categorization has been updated. Check out information(i) icon for more details. Partial match for colors is now neighbouring colors!!'; // ← edit or set to null to hide
 
 const ANNOUNCEMENT_LINK = null; //Null for default
 const ANNOUNCEMENT_LINK_TEXT = '';

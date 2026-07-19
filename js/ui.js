@@ -300,13 +300,12 @@ const stats = getStats(currentMode);
 function renderStatsBlock(stats, mode) {
   const avg = stats.averageGuesses;
   const rows = [
-    { label: 'Current Streak', value: stats.currentStreak },
-    { label: 'Best Streak', value: stats.bestStreak },
-    { label: 'Wins', value: stats.totalWins },
+  { label: 'Played', value: stats.totalPlayed },
     { label: 'Avg Guesses', value: avg },
   ];
   if (mode === 'daily') {
-    rows.splice(2, 0, { label: 'Played', value: stats.totalPlayed });
+    rows.push({ label: 'Current Streak', value: stats.currentStreak });
+    rows.push({ label: 'Best Streak', value: stats.bestStreak });
   }
  
   const cells = rows.map((r) => `

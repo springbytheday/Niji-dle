@@ -36,13 +36,18 @@
 
 <body>
   <div class="stage">
+    <div id="announcement-banner" class="announcement-banner" role="alert" aria-live="polite">
+      <span id="announcement-text" class="announcement-text"></span>
+      <button id="announcement-close" class="announcement-close" type="button"
+        aria-label="Dismiss announcement">&times;</button>
+    </div>
     <header class="topbar">
       <div class="brand">
         <span class="brand-mark">Niji-Dle</span>
       </div>
       <div class="topbar-actions">
         <button id="info-button" class="icon-button" type="button" aria-label="Information" aria-haspopup="dialog">
-          <span aria-hidden="true">𝒾</span>
+          <span aria-hidden="true" style="font-style: italic;">i</span>
         </button>
         <button id="help-button" class="icon-button" type="button" aria-label="How to play" aria-haspopup="dialog">
           <span aria-hidden="true">?</span>
@@ -52,31 +57,6 @@
         </button>
       </div>
     </header>
-
-    <div id="information-overlay" class="overlay-overlay">
-      <div id="information-dialog" class="overlay-dialog" role="dialog" aria-modal="true"
-        aria-labelledby="information-title" tabindex="-1">
-        <button id="information-close" class="overlay-close" type="button" aria-label="Close Information">
-          &times;
-        </button>
-        <h2 id="tutorial-title" class="overlay-title">Information</h2>
-        <p class="overlay-text">
-          Greatly inspired by wordle, loldle, genshindle.
-          </br></br>
-          Data is manually handled and might have errors or inconsistencies. Especially for species, please excuse any
-          weird categorization. Suggestions are greatly welcomed.
-          <br />
-          Thank you to the amazing fans who had helped with gathering the data.
-          <br /><br />
-          Google Analytics has been added to Niji-Dle to understand web traffic and other stuff.
-        </p>
-
-        <p class="overlay-text">If you notice any mistakes or would like to make any
-          suggestions, please fill in our
-          <a class="overlay-link" href="https://forms.gle/bh3GgWXefc9dMcMg7">feedback form here.</a>
-        </p>
-      </div>
-    </div>
 
     <div id="tutorial-overlay" class="overlay-overlay">
       <div id="tutorial-dialog" class="overlay-dialog" role="dialog" aria-modal="true" aria-labelledby="tutorial-title"
@@ -88,7 +68,7 @@
         <h2 id="tutorial-title" class="overlay-title">How to play Niji-Dle</h2>
 
         <p class="overlay-text">
-          Try to guess today's Nijisanji liver using the hints provided - Debut Year, Gender, Species and Liver Color.
+          Try to guess the Nijisanji liver using the hints provided - Debut Year, Gender, Species and Liver Color.
         </p>
 
         <ul class="overlay-legend">
@@ -98,8 +78,8 @@
           </li>
           <li>
             <span class="legend-swatch legend-swatch--partial"></span>
-            <strong>Partial</strong> &mdash; close, but not exact (e.g. same color
-            family, or species sharing a word like &ldquo;human&rdquo;).
+            <strong>Partial</strong> &mdash; close, but not exact (e.g. neighbouring colors like red and orange, or
+            species sharing a word like &ldquo;human&rdquo;).
           </li>
           <li>
             <span class="legend-swatch legend-swatch--miss"></span>
@@ -110,12 +90,6 @@
           For debut year, &uarr; indicates a later year while &darr; indicates an earlier year.
         </p>
         <p class="overlay-text">
-          <a class="overlay-link"
-            href="https://docs.google.com/spreadsheets/d/1aRGuWlfZnVYysl0xETWDgk6urrgs6egJVP9c28aa37M/edit?usp=sharing"
-            target="_blank">Click
-            here</a> for liver color categorization sheet.
-        </p>
-        <p class="overlay-text">
           Niji-Dle resets at 00:00 in your localtime.
         </p>
         <button id="tutorial-start" class="overlay-start" type="button">
@@ -124,8 +98,99 @@
       </div>
     </div>
 
+    <div id="overlay-overlay" class="overlay-overlay">
+      <div id="overlay-dialog" class="overlay-dialog" role="dialog" aria-modal="true" aria-labelledby="overlay-title"
+        tabindex="-1">
+        <button id="overlay-close" class="overlay-close" type="button" aria-label="Close overlay">
+          &times;
+        </button>
+
+        <!-- Tab strip -->
+        <div class="overlay-tabs" role="tablist">
+          <button class="overlay-tab overlay-tab--active" role="tab" aria-selected="true" aria-controls="tab-colors"
+            data-tab="colors" type="button">Colors</button>
+          <button class="overlay-tab" role="tab" aria-selected="false" aria-controls="tab-species" data-tab="species"
+            type="button">Data</button>
+          <button class="overlay-tab" role="tab" aria-selected="false" aria-controls="tab-info" data-tab="info"
+            type="button">About</button>
+        </div>
+
+        <!-- Tab: Colors -->
+        <div id="tab-colors" class="overlay-panel" role="tabpanel">
+          <h2 id="overlay-title" class="overlay-title">Colors</h2>
+          <p class="overlay-text">Colors will get a partial match when they are neighbouring classes. Below shows the
+            neighbouring colors for the two groups, chromatic and achromatic colors.</p>
+          <p class="overlay-text">If you liked to see which livers are in which color family, you can click
+            <a class="overlay-link"
+              href="https://docs.google.com/spreadsheets/d/1aRGuWlfZnVYysl0xETWDgk6urrgs6egJVP9c28aa37M/edit?usp=sharing">here</a>
+
+          </p>
+          <p class="overlay-text">Chromatic
+          </p>
+          <div id="wheel">
+          </div>
+          <p class="overlay-text">Achromatic</p>
+          <div class="achromatic" id="achromatic">
+          </div>
+        </div>
+
+        <!-- Tab: Information -->
+        <div id="tab-info" class="overlay-panel overlay-panel--hidden" role="tabpanel">
+          <h2 class="overlay-title">Information</h2>
+          <p class="overlay-text">
+            Greatly inspired by wordle, loldle, genshindle.
+            </br></br>
+            Data is manually handled and might have errors or inconsistencies. Especially for species, please excuse any
+            weird categorization. Suggestions are greatly welcomed.
+            <br />
+            Thank you to the amazing fans who had helped with gathering the data.
+            <br /><br />
+            Google Analytics has been added to Niji-Dle to understand web traffic and other stuff.
+          </p>
+
+          <p class="overlay-text">If you notice any mistakes or would like to make any
+            suggestions, please fill in our
+            <a class="overlay-link" href="https://forms.gle/bh3GgWXefc9dMcMg7">feedback form here.</a>
+          </p>
+        </div>
+
+        <!-- Tab: Stats -->
+        <div id="tab-species" class="overlay-panel overlay-panel--hidden" role="tabpanel">
+          <h2 class="overlay-title">Species</h2>
+          <p class="overlay-text">The possible data for species can include:
+          </p>
+          <ul>
+            <li class="overlay-text">Human</li>
+            <li class="overlay-text">Mythical Being</li>
+            <li class="overlay-text">Divine Being</li>
+            <li class="overlay-text">Animal</li>
+            <li class="overlay-text">Yokai</li>
+            <li class="overlay-text">Demon</li>
+          </ul>
+          <p class="overlay-text">All except demon can have additional details such as: Animals - Penguin, Divine Being:
+            Angel, Mythical Being: Cerberus, Yokai: Karasu Tengu, Magidborn Human</p>
+          <h2 class="overlay-title">Gender</h2>
+          <p class="overlay-text">There are 4 possible categories</p>
+          <ul>
+            <li class="overlay-text">Male</li>
+            <li class="overlay-text">Female</li>
+            <li class="overlay-text">Ambigious</li>
+            <li class="overlay-text">Unknown</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+
     <main class="game">
-      <p class="prompt">Guess today&rsquo;s Nijisanji liver</p>
+      <div class="mode-tabs" role="tablist">
+        <button id="mode-daily" class="mode-tab mode-tab--active" role="tab" aria-selected="true" type="button"
+          onclick="switchMode('daily')">Daily</button>
+        <button id="mode-unlimited" class="mode-tab" role="tab" aria-selected="false" type="button"
+          onclick="switchMode('unlimited')">Unlimited</button>
+      </div>
+
+      <p class="prompt">Guess the Nijisanji liver</p>
 
       <div class="guess-box">
         <input id="guess-input" type="text" autocomplete="off" placeholder="Type a liver name&hellip;"
@@ -169,6 +234,7 @@
   <script src="js/ui.js"></script>
   <script src="js/theme.js"></script>
   <script src="js/modal.js"></script>
+  <script src="js/banner.js"></script>
   <script>
     initGame();
   </script>

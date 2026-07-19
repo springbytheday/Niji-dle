@@ -30,8 +30,6 @@ function renderBoard(animateFirst = false) {
   const shouldAnimate =
     animateFirst && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-
-
   const rows = guesses
     .map((g, i) => renderRow(g, i === 0, i === 0 && shouldAnimate))
     .join('');
@@ -247,16 +245,22 @@ function showEndState() {
   const input = document.getElementById('guess-input');
   if (input) {
     input.disabled = true;
-    input.placeholder = "Today's liver has been found";
+    input.placeholder = currentMode === 'daily' ? "Today's liver has been found" : "You've found the liver";
   }
-  if (banner) {
+
+  if (!banner) return;
+
+const stats = getStats(currentMode);
+
+  if (currentMode === 'daily') {
     banner.innerHTML = `
       <div class="end-card">
         <p class="end-title">It was ${escapeHtml(answerliver.name)}!</p>
         <p class="end-sub">New liver in: <span id="countdown-display" class="countdown-display">00:00:00</span></p>
         <button id="share-button" class="share-button" type="button">Share results</button>
         <a class="end-link" href="https://forms.gle/pbkSTggPu1ghMwae8">Share some fun facts about your fav livers~</a>
-      </div>`;
+      </div>
+      ${renderStatsBlock(stats, 'daily')}`;;
     banner.classList.add('visible');
  
     const shareButton = document.getElementById('share-button');
@@ -266,7 +270,92 @@ function showEndState() {
     
     startCountdown();
   }
+  else {
+    // Unlimited mode — no countdown or share, just a play-again button
+    banner.innerHTML = `
+      <div class="end-card">
+        <p class="end-title">It was ${escapeHtml(answerliver.name)}!</p>
+        <p class="end-sub">Want to go again?</p>
+        <button id="play-again-button" class="share-button" type="button">Play again</button>
+      </div>
+      ${renderStatsBlock(stats, 'unlimited')}`;
+    banner.classList.add('visible');
+
+    const playAgainButton = document.getElementById('play-again-button');
+    if (playAgainButton) {
+      playAgainButton.addEventListener('click', () => {
+        banner.classList.remove('visible');
+        banner.innerHTML = '';
+        input.disabled = false;
+        input.placeholder = "Type a liver name...";
+        newUnlimitedRound();
+      });
+    }
+  }
 }
+
+
+// Builds the stats block HTML for both modes.
+// Returns an HTML string injected inline below the end-card.
+function renderStatsBlock(stats, mode) {
+  const avg = stats.averageGuesses;
+  const rows = [
+  { label: 'Played', value: stats.totalPlayed },
+    { label: 'Avg Guesses', value: avg },
+  ];
+  if (mode === 'daily') {
+    rows.push({ label: 'Current Streak', value: stats.currentStreak });
+    rows.push({ label: 'Best Streak', value: stats.bestStreak });
+  }
+ 
+  const cells = rows.map((r) => `
+    <div class="stats-cell">
+      <span class="stats-value">${escapeHtml(String(r.value))}</span>
+      <span class="stats-label">${escapeHtml(r.label)}</span>
+    </div>`).join('');
+ 
+  return `<div class="stats-block">${cells}</div>`;
+}
+
+// ----------------------------------------------------------------
+// Modes
+// ----------------------------------------------------------------
+
+// Updates the mode toggle tabs to reflect which mode is currently active.
+// Called by switchMode() in game.js whenever the mode changes.
+function updateModeToggle(mode) {
+  const dailyTab = document.getElementById('mode-daily');
+  const unlimitedTab = document.getElementById('mode-unlimited');
+  if (dailyTab && unlimitedTab) {
+    dailyTab.classList.toggle('mode-tab--active', mode === 'daily');
+    dailyTab.setAttribute('aria-selected', mode === 'daily' ? 'true' : 'false');
+    unlimitedTab.classList.toggle('mode-tab--active', mode === 'unlimited');
+    unlimitedTab.setAttribute('aria-selected', mode === 'unlimited' ? 'true' : 'false');
+  }
+
+  const prompt = document.getElementById('game-prompt');
+  if (prompt) {
+    prompt.textContent = mode === 'daily'
+      ? 'Guess today\u2019s Nijisanji liver'
+      : 'Guess any Nijisanji liver';
+  }
+
+  // Clear the end-banner and stop the countdown when switching modes,
+  // so a won daily board doesn't leave a frozen end-card when you
+  // switch to unlimited (and vice versa).
+  const banner = document.getElementById('end-banner');
+  if (banner) {
+    banner.classList.remove('visible');
+    banner.innerHTML = '';
+  }
+  const input = document.getElementById('guess-input');
+  if (input && mode === 'unlimited') {
+    input.disabled = false;
+    input.placeholder = "Type a liver name...";
+  }
+  stopCountdown();
+}
+
 // ----------------------------------------------------------------
 // Autocomplete
 // ----------------------------------------------------------------

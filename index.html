@@ -73,17 +73,22 @@
 
         <ul class="overlay-legend">
           <li>
+            <strong>Match</strong> &mdash;
             <span class="legend-swatch legend-swatch--hit"></span>
-            <strong>Match</strong> &mdash; this attribute is exactly right.
+            this attribute is exactly right.
           </li>
           <li>
+            <strong>Partial</strong>&mdash;
             <span class="legend-swatch legend-swatch--partial"></span>
-            <strong>Partial</strong> &mdash; close, but not exact (e.g. neighbouring colors like red and orange, or
-            species sharing a word like &ldquo;human&rdquo;).
+            is for same color family and
+            species sharing a word like &ldquo;human&rdquo;.
+            <span class="legend-swatch legend-swatch--another_partial"></span> is specifically for neighbouring colors
+            like purple and teal for blue.
           </li>
           <li>
+            <strong>No match</strong> &mdash;
             <span class="legend-swatch legend-swatch--miss"></span>
-            <strong>No match</strong> &mdash; not related to the answer.
+            not related to the answer.
           </li>
         </ul>
         <p class="overlay-text">
@@ -118,7 +123,10 @@
         <!-- Tab: Colors -->
         <div id="tab-colors" class="overlay-panel" role="tabpanel">
           <h2 id="overlay-title" class="overlay-title">Colors</h2>
-          <p class="overlay-text">Colors will get a partial match when they are neighbouring classes. Below shows the
+          <p class="overlay-text">Colors will get a yellow <span class="legend-swatch legend-swatch--partial"></span>
+            partial match when they are in the same family and an orange <span
+              class="legend-swatch legend-swatch--another_partial"></span>
+            partial match when they are neighbouring classes. Below shows the
             neighbouring colors for the two groups, chromatic and achromatic colors.</p>
           <p class="overlay-text">If you liked to see which livers are in which color family, you can click
             <a class="overlay-link"
@@ -209,6 +217,8 @@
       <footer class="legend">
         <span class="legend-item"><span class="legend-swatch legend-swatch--hit"></span> Match</span>
         <span class="legend-item"><span class="legend-swatch legend-swatch--partial"></span> Partial</span>
+        <span class="legend-item"><span class="legend-swatch legend-swatch--another_partial"></span> Neighbouring
+          Color</span>
         <span class="legend-item"><span class="legend-swatch legend-swatch--miss"></span> No match</span>
         <span class="legend-item"><span class=" arrow">&darr;</span> Earlier</span>
         <span class="legend-item"><span class=" arrow">&uarr;</span> Later</span>

@@ -216,8 +216,8 @@ function compareLiverColor(guessColor, answerColor, guessHueFamily, answerHueFam
   }
   const g = guessHueFamily.toLowerCase();
   const a = answerHueFamily.toLowerCase();
-  if (g === a) return { status: 'hit', value: guessColor };
-  if (areColourNeighbours(g, a)) return { status: 'partial', value: guessColor };
+  if (g === a) return { status: 'partial', value: guessColor };
+  if (areColourNeighbours(g, a)) return { status: 'another_partial', value: guessColor };
   return { status: 'miss', value: guessColor };
 }
 

@@ -99,6 +99,7 @@ function flipAttrs(status, flipIndex) {
   const reveal = {
     hit: { bg: 'var(--hit)', color: '#fff', border: 'transparent' },
     partial: { bg: 'var(--partial)', color: '#1a1300', border: 'transparent' },
+    another_partial: { bg: 'var(--another_partial)', color: '#1a1300', border: 'transparent' },
     miss: { bg: 'var(--miss)', color: 'var(--text)', border: 'transparent' },
   }[status];
 
@@ -135,6 +136,7 @@ function renderLiverColorCell(data, flipIndex) {
 const STATUS_EMOJI = {
   hit: '🟩',
   partial: '🟨',
+  another_partial:'🟧',
   miss: '⬛',
 };
 

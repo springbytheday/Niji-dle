@@ -7,6 +7,7 @@
   --text-dim: #9a96b3;
   --hit: #1c9956;
   --partial: #ffb23d;
+  --another_partial: #ff743d;
   --miss: #3a3a4a;
   --unknown: #5a5a6e;
   --border: #2a2a38;
@@ -26,7 +27,8 @@
   --text: #0f172a;
   --text-dim: #64748b;
   --hit: #16a34a;
-  --partial: #d97706;
+  --partial: #d9b906;
+  --another_partial: #d96c06;
   --miss: #cbd5e1;
   --unknown: #94a3b8;
   --border: #e2e8f0;
@@ -43,6 +45,7 @@
   --text-dim: #9a96b3;
   --hit: #1c9956;
   --partial: #ffb23d;
+  --another_partial: #ff743d;
   --miss: #3a3a4a;
   --unknown: #5a5a6e;
   --border: #2a2a38;
@@ -55,7 +58,8 @@
   --text: #0f172a;
   --text-dim: #64748b;
   --hit: #16a34a;
-  --partial: #d97706;
+  --partial: #d9b906;
+  --another_partial: #d96c06;
   --miss: #cbd5e1;
   --unknown: #94a3b8;
   --border: #e2e8f0;
@@ -522,6 +526,11 @@ body {
   color: #1a1300;
 }
 
+.cell--another_partial {
+  background: var(--another_partial);
+  color: #1a1300;
+}
+
 .cell--miss {
   background: var(--miss);
   color: var(--text);
@@ -575,6 +584,7 @@ body {
 
 .legend-swatch--hit { background: var(--hit); }
 .legend-swatch--partial { background: var(--partial); }
+.legend-swatch--another_partial { background: var(--another_partial); }
 .legend-swatch--miss { background: var(--miss); }
 .legend-swatch--unknown { background: transparent; border: 1px dashed var(--unknown); }
 

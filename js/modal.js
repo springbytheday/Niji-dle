@@ -1,20 +1,3 @@
-const TUTORIAL_STORAGE_KEY = 'nijidle_tutorial_seen';
-
-function hasSeenTutorial() {
-  try {
-    return localStorage.getItem(TUTORIAL_STORAGE_KEY) === 'true';
-  } catch (e) {
-    return false;
-  }
-}
-
-function markTutorialSeen() {
-  try {
-    localStorage.setItem(TUTORIAL_STORAGE_KEY, 'true');
-  } catch (e) {
-  }
-}
-
 function setupTutorial() {
   const overlay = document.getElementById('tutorial-overlay');
   const dialog = document.getElementById('tutorial-dialog');
@@ -36,7 +19,6 @@ function setupTutorial() {
   function closeTutorial() {
     overlay.classList.remove('visible');
     document.removeEventListener('keydown', handleKeydown);
-    markTutorialSeen();
     if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
       lastFocusedElement.focus();
     }
@@ -70,14 +52,9 @@ function setupTutorial() {
   helpButton.addEventListener('click', openTutorial);
   closeButton.addEventListener('click', closeTutorial);
   startButton.addEventListener('click', closeTutorial);
-
-  if (!hasSeenTutorial()) {
-    openTutorial();
-  }
 }
 
 function setupInformation() {
-console.log("setup overlay");
 const overlay = document.getElementById('overlay-overlay');
 const dialog = document.getElementById('overlay-dialog');
 const closeBtn = document.getElementById('overlay-close');
@@ -120,7 +97,6 @@ ColorWheelinit();
 function closeInformation() {
 overlay.classList.remove('visible');
 document.removeEventListener('keydown', handleKeydown);
-markoverlaySeen();
 if (lastFocused && typeof lastFocused.focus === 'function') {
 lastFocused.focus();
 }

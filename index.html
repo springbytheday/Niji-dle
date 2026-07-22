@@ -5,6 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Niji-Dle &mdash; Daily Nijisanji Guessing Game</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
@@ -36,11 +37,6 @@
 
 <body>
   <div class="stage">
-    <div id="announcement-banner" class="announcement-banner" role="alert" aria-live="polite">
-      <span id="announcement-text" class="announcement-text"></span>
-      <button id="announcement-close" class="announcement-close" type="button"
-        aria-label="Dismiss announcement">&times;</button>
-    </div>
     <header class="topbar">
       <div class="brand">
         <span class="brand-mark">Niji-Dle</span>
@@ -57,7 +53,35 @@
         </button>
       </div>
     </header>
+    <div id="announcement-overlay" class="overlay-overlay">
+      <div id="announcement-popup" class="overlay-dialog" role="dialog" aria-modal="true"
+        aria-labelledby="overlay-title">
+        <button id="announcement-close" class="overlay-close" aria-label="Close">&times;</button>
 
+        <h2 id="announcement-title" class="overlay-title">📢 Announcement</h2>
+
+        <p class="overlay-text">
+          There have been some recent changes to Niji-Dle.
+          The addition of unlimited mode, species categorization update as well as rework of the color column.
+          <br />
+          <br />
+          After the intial update, many had experience getting 4 green but not the end screen. Unfortunately, there were
+          many livers with those traits which caused some confusion.
+          <br />
+          <br />
+          To address that, the color column has been updated so that:
+          Yellow -> same color family, Orange -> neighbouring color family
+          <br />
+          Check out the information tab (i) for more details.
+        </p>
+        <p class="overlay-text">Thank you for playing Niji-Dle ❤︎</p>
+        <!--
+          <a href="URL" target="_blank" rel="noopener noreferrer" class="overlay-link">
+          Take the survey
+        </a>
+        -->
+      </div>
+    </div>
     <div id="tutorial-overlay" class="overlay-overlay">
       <div id="tutorial-dialog" class="overlay-dialog" role="dialog" aria-modal="true" aria-labelledby="tutorial-title"
         tabindex="-1">
@@ -244,7 +268,7 @@
   <script src="js/ui.js"></script>
   <script src="js/theme.js"></script>
   <script src="js/modal.js"></script>
-  <script src="js/banner.js"></script>
+  <script src="js/announcement.js"></script>
   <script>
     initGame();
   </script>

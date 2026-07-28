@@ -260,7 +260,7 @@ const stats = getStats(currentMode);
         <p class="end-title">It was ${escapeHtml(answerliver.name)}!</p>
         <p class="end-sub">New liver in: <span id="countdown-display" class="countdown-display">00:00:00</span></p>
         <button id="share-button" class="share-button" type="button">Share results</button>
-        <a class="end-link" href="https://forms.gle/pbkSTggPu1ghMwae8">Share some fun facts about your fav livers~</a>
+        <a class="end-link" href="https://forms.gle/WUrq4tnb7BhNateK9">Have you filled in the 1 Month check in?</a>
       </div>
       ${renderStatsBlock(stats, 'daily')}`;;
     banner.classList.add('visible');

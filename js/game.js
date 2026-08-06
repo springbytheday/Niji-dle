@@ -10,6 +10,61 @@ let gameOver = false;
 let currentMode = 'daily'; 
 
 // ----------------------------------------------------------------
+// Unlimited mode — branch filtering
+// ----------------------------------------------------------------
+const BRANCH_STORAGE_KEY = 'nijidle_branches';
+let selectedBranches = [];
+
+// Returns the sorted list of distinct branch values present in the pool.
+function getAllBranches() {
+  return [...new Set(alllivers.map((t) => t.branch).filter(Boolean))].sort();
+}
+
+function loadSavedBranches() {
+  try {
+    const raw = localStorage.getItem(BRANCH_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function saveBranches(branches) {
+  try {
+    localStorage.setItem(BRANCH_STORAGE_KEY, JSON.stringify(branches));
+  } catch (e) {
+    // Non-critical
+  }
+}
+
+// Livers eligible to be the Unlimited answer, given the current branch
+// selection. Falls back to the full roster if the filter would otherwise
+// leave nothing to pick from.
+function getUnlimitedPool() {
+  const pool = alllivers.filter((t) => selectedBranches.includes(t.branch));
+  return pool.length > 0 ? pool : alllivers;
+}
+
+// Opens the branch picker modal (see modal.js) and resolves once the
+// player confirms a selection, saving it for next time.
+function chooseBranches() {
+  return new Promise((resolve) => {
+    if (typeof openBranchPicker !== 'function') {
+      // Picker isn't available for some reason — fall back to everything.
+      resolve(getAllBranches());
+      return;
+    }
+    openBranchPicker((branches) => {
+      selectedBranches = branches;
+      saveBranches(branches);
+      resolve(branches);
+    });
+  });
+}
+
+// ----------------------------------------------------------------
 // Date handling — the daily puzzle resets at local midnight.
 // ----------------------------------------------------------------
 function todayKey() {
@@ -350,12 +405,14 @@ async function switchMode(mode, isInitialLoad = false) {
           .map((t) => compareGuess(t, answerliver));
         gameOver = savedUnlimited.gameOver;
       } else {
-        // Saved liver no longer in active roster (e.g. was deactivated)
+       // Saved liver no longer in active roster (e.g. was deactivated)
         // — start fresh rather than restoring a broken state.
         clearUnlimitedProgress();
-        answerliver = resolveUnlimitedAnswer(alllivers);
+        selectedBranches = await chooseBranches();
+        answerliver = resolveUnlimitedAnswer(getUnlimitedPool());
       }
     } else {
+      selectedBranches = await chooseBranches();
       answerliver = resolveUnlimitedAnswer(alllivers);
     }
   }
@@ -379,6 +436,7 @@ function newUnlimitedRound() {
   clearUnlimitedProgress();
   guesses = [];
   gameOver = false;
+  selectedBranches = chooseBranches();
   answerliver = resolveUnlimitedAnswer(alllivers);
   renderBoard();
   setupAutocomplete();

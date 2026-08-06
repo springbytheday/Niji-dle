@@ -216,6 +216,29 @@
       </div>
     </div>
 
+    <div id="branch-overlay" class="overlay-overlay">
+      <div id="branch-dialog" class="overlay-dialog" role="dialog" aria-modal="true" aria-labelledby="branch-title"
+        tabindex="-1">
+        <button id="branch-close" class="overlay-close" type="button" aria-label="Close branch picker">
+          &times;
+        </button>
+
+        <h2 id="branch-title" class="overlay-title">Choose branches</h2>
+
+        <p class="overlay-text">
+          Pick which Nijisanji branches Unlimited mode can draw the answer from.
+        </p>
+
+        <div id="branch-checkbox-list" class="branch-checkbox-list"></div>
+
+        <p id="branch-error" class="branch-error" role="alert"></p>
+
+        <button id="branch-start" class="overlay-start" type="button">
+          Start guessing
+        </button>
+      </div>
+    </div>
+
     <main class="game">
       <div class="mode-tabs" role="tablist">
         <button id="mode-daily" class="mode-tab mode-tab--active" role="tab" aria-selected="true" type="button"

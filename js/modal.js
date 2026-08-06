@@ -253,5 +253,126 @@ function ColorWheelinit() {
     createAchromatic();
 }
 
+
+// ── Branch Picker ───────────────────────────────────────────
+
+function setupBranchPicker() {
+  const overlay = document.getElementById('branch-overlay');
+  const dialog = document.getElementById('branch-dialog');
+  const closeButton = document.getElementById('branch-close');
+  const startButton = document.getElementById('branch-start');
+  const list = document.getElementById('branch-checkbox-list');
+  const errorEl = document.getElementById('branch-error');
+
+  if (!overlay || !dialog || !startButton || !list) return;
+
+  let lastFocusedElement = null;
+  let pendingConfirm = null;
+
+  function branchCheckboxId(branch) {
+    return 'branch-cb-' + branch.replace(/\s+/g, '-').toLowerCase();
+  }
+
+  function renderCheckboxes() {
+    const branches = getAllBranches();
+    const saved = loadSavedBranches();
+    list.innerHTML = '';
+
+    branches.forEach((branch) => {
+      const id = branchCheckboxId(branch);
+      const isChecked = saved ? saved.includes(branch) : true; // default: everything checked
+
+      const label = document.createElement('label');
+      label.className = 'branch-checkbox-item';
+      label.htmlFor = id;
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = id;
+      checkbox.value = branch;
+      checkbox.checked = isChecked;
+
+      const span = document.createElement('span');
+      span.textContent = branch;
+
+      label.appendChild(checkbox);
+      label.appendChild(span);
+      list.appendChild(label);
+    });
+  }
+
+  function getCheckedBranches() {
+    return Array.from(list.querySelectorAll('input[type="checkbox"]:checked')).map((cb) => cb.value);
+  }
+
+  function openBranchPickerImpl(onConfirm) {
+    pendingConfirm = onConfirm;
+    if (errorEl) errorEl.textContent = '';
+    renderCheckboxes();
+    lastFocusedElement = document.activeElement;
+    overlay.classList.add('visible');
+    document.addEventListener('keydown', handleKeydown);
+    dialog.focus();
+  }
+
+  function closeBranchPicker() {
+    overlay.classList.remove('visible');
+    document.removeEventListener('keydown', handleKeydown);
+    if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+      lastFocusedElement.focus();
+    }
+  }
+
+  function confirmSelection() {
+    const checked = getCheckedBranches();
+    if (checked.length === 0) {
+      if (errorEl) errorEl.textContent = 'Pick at least one branch to continue.';
+      return;
+    }
+    closeBranchPicker();
+    const callback = pendingConfirm;
+    pendingConfirm = null;
+    if (callback) callback(checked);
+  }
+
+  function handleKeydown(e) {
+    if (e.key === 'Escape') {
+      // No cancel state here — Escape just confirms whatever's checked,
+      // same as closing the dialog, so the game can always proceed.
+      confirmSelection();
+      return;
+    }
+    if (e.key === 'Tab') {
+      trapFocus(e);
+    }
+  }
+
+  function trapFocus(e) {
+    const focusable = dialog.querySelectorAll('button, input[type="checkbox"]');
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
+  startButton.addEventListener('click', confirmSelection);
+  if (closeButton) {
+    closeButton.addEventListener('click', confirmSelection);
+  }
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) confirmSelection();
+  });
+
+  // Exposed for game.js's chooseBranches() to call.
+  window.openBranchPicker = openBranchPickerImpl;
+}
 setupInformation();
 setupTutorial();
+setupBranchPicker();

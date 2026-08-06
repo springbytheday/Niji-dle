@@ -882,6 +882,51 @@ body {
   display: none;
 }
 
+
+/* ---------------- Branch picker ---------------- */
+ 
+.branch-checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 12px;
+  max-height: 40vh;
+  overflow-y: auto;
+}
+ 
+.branch-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background-color 0.15s ease;
+}
+ 
+.branch-checkbox-item:hover {
+  background: var(--bg);
+}
+ 
+.branch-checkbox-item input[type='checkbox'] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--hit);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+ 
+.branch-error {
+  font-size: 12px;
+  color: var(--another_partial);
+  min-height: 16px;
+  margin: 0 0 8px;
+}
+ 
+
+
 /* ---------------- Responsive ---------------- */
 
 @media (max-width: 480px) {

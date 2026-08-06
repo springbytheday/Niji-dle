@@ -424,7 +424,7 @@ async function switchMode(mode, isInitialLoad = false) {
         // every branch again.
         selectedBranches = loadSavedBranches() || getAllBranches();
       } else {
-        // Saved liver no longer in active roster (e.g. was deactivated)
+       // Saved liver no longer in active roster (e.g. was deactivated)
         // — start fresh rather than restoring a broken state.
         clearUnlimitedProgress();
         selectedBranches = await chooseBranches();
@@ -457,7 +457,6 @@ async function newUnlimitedRound() {
   gameOver = false;
   selectedBranches = await chooseBranches();
   answerliver = resolveUnlimitedAnswer(getUnlimitedPool());
-  console.log(answerliver);
   renderBoard();
   setupAutocomplete();
 }

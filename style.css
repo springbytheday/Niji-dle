@@ -563,6 +563,23 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
+.swatch-tooltip{
+  visibility: hidden;
+  width: 50px;
+  background-color: var(--bg-raised);
+  color: var(--text);
+  text-align: center;
+  border-radius: 6px;
+  padding: 5px 0;
+  position: absolute;
+  bottom: 75%;
+  z-index: 1;
+}
+
+.cell--swatches:hover .swatch-tooltip {
+  visibility: visible;
+}
+
 .arrow {
   margin-left: 4px;
   font-weight: 700;

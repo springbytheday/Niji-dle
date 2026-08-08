@@ -36,7 +36,7 @@
   <div class="wrap">
     <header>
       <div class="updates-topbar">
-        <a class="brand " href="/"><span class="brand-mark">Niji-dle</span></a>
+        <span class="brand-mark">Niji-Dle</span>
         <div class="topbar-side">
           <a class="back" href="/">&larr; Back to main site</a>
           <button id="theme-toggle" class="icon-button" type="button" aria-label="Toggle light/dark theme">
@@ -46,14 +46,13 @@
       </div>
 
       <div class="hero">
-        <div class="eyebrow">Development board</div>
         <h1>What I'm building.</h1>
         <p>
           A public look at Niji-Dle's development — what's planned, what's being
           built, what's being tested, and what's already shipped.
         </p>
       </div>
-
+      <!--
       <div class="stats">
         <div class="stat">
           <strong id="totalCount">0</strong>
@@ -67,11 +66,8 @@
           <strong id="doneCount">0</strong>
           <span>Completed</span>
         </div>
-        <div class="stat">
-          <strong id="completion">0%</strong>
-          <span>Overall progress</span>
-        </div>
       </div>
+      -->
     </header>
 
     <main>
@@ -83,42 +79,17 @@
           <button class="filter" data-filter="design">Design</button>
           <button class="filter" data-filter="improvement">Improvements</button>
         </div>
-        <div class="updated">Last updated: <strong>August 6, 2026</strong></div>
+        <div class="updated">Last updated: <strong>August 8, 2026</strong></div>
       </div>
 
-      <div class="updates-board">
+      <div class="board">
         <div class="column planned">
           <div class="column-head">
             <div class="column-title"><span class="dot"></span>Planned</div>
             <span class="count" data-count="planned">0</span>
           </div>
-          <div class="cards">
-
-            <article class="card" data-type="feature" data-status="planned">
-              <div class="tags">
-                <span class="tag">Feature</span>
-                <span class="tag priority">High priority</span>
-              </div>
-              <h3>Player profiles</h3>
-              <p>Let players customise their profile and show their stats and achievements.</p>
-              <div class="card-footer"><span>Coming soon</span><span>Feature</span></div>
-            </article>
-
-            <article class="card" data-type="feature" data-status="planned">
-              <div class="tags"><span class="tag">Feature</span></div>
-              <h3>Daily challenge history</h3>
-              <p>A page where players can see previous daily challenges and their results.</p>
-              <div class="card-footer"><span>Planned</span><span>Feature</span></div>
-            </article>
-
-            <article class="card" data-type="design" data-status="planned">
-              <div class="tags"><span class="tag">Design</span></div>
-              <h3>Dark mode polish</h3>
-              <p>Refine colours, contrast and small-screen layouts across the whole site.</p>
-              <div class="card-footer"><span>Planned</span><span>Design</span></div>
-            </article>
-
-          </div>
+          <div class="cards" id="cards-planned"></div>
+          <div id="planned-toggle-wrap"></div>
         </div>
 
         <div class="column progress">
@@ -126,33 +97,8 @@
             <div class="column-title"><span class="dot"></span>In progress</div>
             <span class="count" data-count="progress">0</span>
           </div>
-          <div class="cards">
-
-            <article class="card" data-type="feature" data-status="progress">
-              <div class="tags"><span class="tag">Feature</span><span class="tag">UI</span></div>
-              <h3>New game dashboard</h3>
-              <p>Building a cleaner dashboard for starting games and seeing recent activity.</p>
-              <div class="progressbar" style="--progress: 65%"><span></span></div>
-              <div class="card-footer"><span>65% complete</span><span>Active</span></div>
-            </article>
-
-            <article class="card" data-type="improvement" data-status="progress">
-              <div class="tags"><span class="tag">Improvement</span></div>
-              <h3>Mobile experience</h3>
-              <p>Improving navigation and touch interactions on phones and smaller screens.</p>
-              <div class="progressbar" style="--progress: 40%"><span></span></div>
-              <div class="card-footer"><span>40% complete</span><span>Active</span></div>
-            </article>
-
-            <article class="card" data-type="feature" data-status="progress">
-              <div class="tags"><span class="tag">Feature</span><span class="tag">Backend</span></div>
-              <h3>Stats tracking</h3>
-              <p>Adding the data layer needed to track player performance over time.</p>
-              <div class="progressbar" style="--progress: 30%"><span></span></div>
-              <div class="card-footer"><span>30% complete</span><span>Active</span></div>
-            </article>
-
-          </div>
+          <div class="cards" id="cards-progress"></div>
+          <div id="progress-toggle-wrap"></div>
         </div>
 
         <div class="column testing">
@@ -160,23 +106,8 @@
             <div class="column-title"><span class="dot"></span>Testing</div>
             <span class="count" data-count="testing">0</span>
           </div>
-          <div class="cards">
-
-            <article class="card" data-type="bug" data-status="testing">
-              <div class="tags"><span class="tag">Bug</span><span class="tag">QA</span></div>
-              <h3>Game result edge cases</h3>
-              <p>Checking unusual game states and making sure results are saved correctly.</p>
-              <div class="card-footer"><span>Testing</span><span>QA</span></div>
-            </article>
-
-            <article class="card" data-type="improvement" data-status="testing">
-              <div class="tags"><span class="tag">Improvement</span></div>
-              <h3>Loading performance</h3>
-              <p>Testing smaller assets and faster loading behaviour on mobile connections.</p>
-              <div class="card-footer"><span>Testing</span><span>Performance</span></div>
-            </article>
-
-          </div>
+          <div class="cards" id="cards-testing"></div>
+          <div id="testing-toggle-wrap"></div>
         </div>
 
         <div class="column done">
@@ -184,33 +115,11 @@
             <div class="column-title"><span class="dot"></span>Completed</div>
             <span class="count" data-count="done">0</span>
           </div>
-          <div class="cards">
-
-            <article class="card" data-type="feature" data-status="done">
-              <div class="tags"><span class="tag">Feature</span><span class="tag">Launch</span></div>
-              <h3>Initial game release</h3>
-              <p>The first playable version of Niji-Dle is live.</p>
-              <div class="card-footer"><span>Shipped</span><span>Done</span></div>
-            </article>
-
-            <article class="card" data-type="design" data-status="done">
-              <div class="tags"><span class="tag">Design</span></div>
-              <h3>Landing page</h3>
-              <p>Created the initial public-facing landing page and project branding.</p>
-              <div class="card-footer"><span>Shipped</span><span>Done</span></div>
-            </article>
-
-            <article class="card" data-type="improvement" data-status="done">
-              <div class="tags"><span class="tag">Improvement</span></div>
-              <h3>GitHub Pages deployment</h3>
-              <p>Set up automated deployment for the public website.</p>
-              <div class="card-footer"><span>Shipped</span><span>Done</span></div>
-            </article>
-
-          </div>
+          <div class="cards" id="cards-done"></div>
+          <div id="done-toggle-wrap"></div>
         </div>
       </div>
-
+      <!--
       <section>
         <div class="section-title">
           <div>
@@ -227,46 +136,28 @@
           </article>
 
           <article class="event">
-            <div class="event-date">August 4, 2026</div>
-            <h3>Dashboard work started</h3>
-            <p>Started redesigning the experience around games, recent activity and player stats.</p>
+            <div class="event-date">July 20, 2026</div>
+            <h3>Major Update 1</h3>
+            <p>Unlimited mode added, color column rework released and data refesh went live</p>
           </article>
 
           <article class="event">
-            <div class="event-date">July 29, 2026</div>
+            <div class="event-date">June 27, 2026</div>
             <h3>Initial release</h3>
-            <p>The first version of Niji-Dle went live.</p>
+            <p>Niji-Dle went live.</p>
           </article>
         </div>
       </section>
-
+-->
       <section>
         <div class="section-title">
           <div>
-            <h2>Roadmap</h2>
-            <p>Where the project is heading.</p>
+            <h2>Get in touch</h2>
+            <p>Report bugs, suggest features, or hang out with the community.</p>
           </div>
         </div>
 
-        <div class="roadmap">
-          <div class="roadmap-card">
-            <div class="number">01 &middot; Now</div>
-            <h3>Core experience</h3>
-            <p>Polish the game, improve mobile support, fix edge cases and make the main experience feel great.</p>
-          </div>
-
-          <div class="roadmap-card">
-            <div class="number">02 &middot; Next</div>
-            <h3>Player features</h3>
-            <p>Profiles, statistics, history and other features that make returning to Niji-Dle more rewarding.</p>
-          </div>
-
-          <div class="roadmap-card">
-            <div class="number">03 &middot; Later</div>
-            <h3>More ways to play</h3>
-            <p>Explore additional game modes, challenges and community-focused features.</p>
-          </div>
-        </div>
+        <div class="link-grid" id="link-cards"></div>
       </section>
     </main>
 
@@ -275,52 +166,8 @@
     </footer>
   </div>
 
-  <script src="js/theme.js"></script>
-  <script>
-    const cards = [...document.querySelectorAll(".card")];
-    const filters = [...document.querySelectorAll(".filter")];
-
-    function updateStats() {
-      const visibleCards = cards.filter(card => !card.classList.contains("hidden"));
-      const total = cards.length;
-      const done = cards.filter(card => card.dataset.status === "done").length;
-      const active = total - done;
-
-      document.getElementById("totalCount").textContent = visibleCards.length;
-      document.getElementById("activeCount").textContent = active;
-      document.getElementById("doneCount").textContent = done;
-      document.getElementById("completion").textContent =
-        Math.round((done / total) * 100) + "%";
-
-      ["planned", "progress", "testing", "done"].forEach(status => {
-        const count = cards.filter(card =>
-          card.dataset.status === status &&
-          !card.classList.contains("hidden")
-        ).length;
-
-        const element = document.querySelector(`[data-count="${status}"]`);
-        if (element) element.textContent = count;
-      });
-    }
-
-    filters.forEach(button => {
-      button.addEventListener("click", () => {
-        const filter = button.dataset.filter;
-
-        filters.forEach(item => item.classList.remove("active"));
-        button.classList.add("active");
-
-        cards.forEach(card => {
-          const show = filter === "all" || card.dataset.type === filter;
-          card.classList.toggle("hidden", !show);
-        });
-
-        updateStats();
-      });
-    });
-
-    updateStats();
-  </script>
+  <script src="/js/theme.js"></script>
+  <script src="/js/updates.js"></script>
 </body>
 
 </html>

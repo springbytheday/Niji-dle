@@ -49,6 +49,7 @@ html {
   font-weight: 700;
   letter-spacing: -0.01em;
   font-size: 1.25rem;
+  color: var(--text);
 }
 
 .back {
@@ -63,29 +64,6 @@ html {
 
 .hero {
   max-width: 820px;
-}
-
-.eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--bg-raised);
-  color: var(--focus);
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
-
-.eyebrow::before {
-  content: '';
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--hit);
 }
 
 .updates-body h1 {
@@ -168,7 +146,7 @@ button.filter.active {
   font-size: 0.82rem;
 }
 
-.updates-board {
+.board {
   display: grid;
   grid-template-columns: repeat(4, minmax(245px, 1fr));
   gap: 14px;
@@ -229,6 +207,25 @@ button.filter.active {
   gap: 10px;
 }
 
+button.show-more {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  border: 1px dashed var(--border);
+  background: none;
+  color: var(--text-dim);
+  border-radius: 9px;
+  padding: 8px;
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+ 
+button.show-more:hover {
+  color: var(--text);
+  border-color: var(--focus);
+}
+
 .card {
   background: var(--bg);
   border: 1px solid var(--border);
@@ -286,22 +283,6 @@ button.filter.active {
   gap: 8px;
   color: var(--text-dim);
   font-size: 0.7rem;
-}
-
-.progressbar {
-  height: 5px;
-  background: var(--miss);
-  border-radius: 999px;
-  overflow: hidden;
-  margin: 10px 0;
-}
-
-.progressbar span {
-  display: block;
-  height: 100%;
-  width: var(--progress);
-  background: var(--focus);
-  border-radius: inherit;
 }
 
 .updates-body section {
@@ -370,20 +351,28 @@ button.filter.active {
   font-size: 0.84rem;
 }
 
-.roadmap {
+.link-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
 }
-
-.roadmap-card {
+ 
+.link-card {
+  display: block;
   background: var(--bg-raised);
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 20px;
+  text-decoration: none;
+  transition: transform 0.15s ease, border-color 0.15s ease;
 }
-
-.roadmap-card .number {
+ 
+.link-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--focus);
+}
+ 
+.link-card .link-kicker {
   color: var(--focus);
   font-family: var(--font-mono);
   font-size: 0.72rem;
@@ -391,14 +380,15 @@ button.filter.active {
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
-
-.roadmap-card h3 {
+ 
+.link-card h3 {
   margin: 8px 0 6px;
   font-family: var(--font-display);
   font-size: 1rem;
+  color: var(--text);
 }
-
-.roadmap-card p {
+ 
+.link-card p {
   margin: 0;
   color: var(--text-dim);
   font-size: 0.82rem;
@@ -414,7 +404,7 @@ button.filter.active {
 @media (max-width: 900px) {
   .board { grid-template-columns: repeat(4, minmax(260px, 1fr)); }
   .stats { grid-template-columns: repeat(2, 1fr); }
-  .roadmap { grid-template-columns: 1fr; }
+  .link-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 560px) {

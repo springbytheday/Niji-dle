@@ -212,12 +212,12 @@ function areColourNeighbours(familyA, familyB) {
 
 function compareLiverColor(guessColor, answerColor, guessHueFamily, answerHueFamily) {
   if (guessColor.toLowerCase() === answerColor.toLowerCase()) {
-    return { status: 'hit', value: guessColor };
+    return { status: 'hit', color: guessColor, family:guessHueFamily};
   }
   const g = guessHueFamily.toLowerCase();
   const a = answerHueFamily.toLowerCase();
-  if (g === a) return { status: 'partial', value: guessColor };
-  if (areColourNeighbours(g, a)) return { status: 'another_partial', value: guessColor };
+  if (g === a) return { status: 'partial', color: guessColor, family:guessHueFamily};
+  if (areColourNeighbours(g, a)) return { status: 'another_partial', color: guessColor, family:guessHueFamily};
   return { status: 'miss', color: guessColor, family:guessHueFamily};
 }
 

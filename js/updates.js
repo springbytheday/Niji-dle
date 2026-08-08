@@ -55,16 +55,16 @@ const UPDATES = [
     footerLeft: 'Gathering Data',
     footerRight: 'Active',
   },
+
+  // ---- Testing ----
   {
     title: '? in color column after update',
     description: 'Due to code update and mismatch code version, colors in column are appearing as ?',
     type: 'bug',
-    status: 'progress',
+    status: 'testing',
     footerLeft: 'Troubleshooting',
     footerRight: 'Active',
   },
-  // ---- Testing ----
-
 
   // ---- Done ----
   {

@@ -1,0 +1,121 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get short SHA
+        id: vars
+        run: echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Inject cache-busting version on script and stylesheet tags
+        run: |
+          SHA="${{ steps.vars.outputs.sha }}"
+          echo "Using version token: $SHA"
+
+          # List every HTML file that loads local /js/*.js scripts and/or
+          # /*.css stylesheets and needs cache-busting. Add more paths here
+          # if you create additional pages that load local assets.
+          FILES=("index.html" "updates/index.html")
+
+          # Regex patterns:
+          #   JS:  src="/js/whatever.js" or src="/js/whatever.js?v=OLD"
+          #   CSS: href="anything/here/style.css" — matches any path depth
+          #        (root, /css/, /ccs/, nested, relative or absolute) since
+          #        guessing the exact folder name has already caused one
+          #        silent miss (root guess, then /ccs/ vs /css/ guess).
+          JS_PATTERN='src="/js/[a-zA-Z0-9_-]+\.js(\?v=[a-zA-Z0-9]+)?"'
+          CSS_PATTERN='href="[a-zA-Z0-9_/-]+\.css(\?v=[a-zA-Z0-9]+)?"'
+
+          TOTAL_CSS_BEFORE=0
+
+          for FILE in "${FILES[@]}"; do
+            if [ ! -f "$FILE" ]; then
+              echo "::warning::$FILE not found — skipping."
+              continue
+            fi
+
+            # Counts BEFORE rewriting, so the safety check below is
+            # self-derived per file rather than a hardcoded number that
+            # can drift out of date.
+            JS_BEFORE=$(grep -oE "$JS_PATTERN" "$FILE" | wc -l)
+            CSS_BEFORE=$(grep -oE "$CSS_PATTERN" "$FILE" | wc -l)
+            TOTAL_CSS_BEFORE=$((TOTAL_CSS_BEFORE + CSS_BEFORE))
+
+            # Rewrite JS src= tags
+            sed -i -E "s|(src=\"/js/[a-zA-Z0-9_-]+\.js)(\?v=[a-zA-Z0-9]+)?\"|\1?v=${SHA}\"|g" "$FILE"
+
+            # Rewrite CSS href= tags at any path depth (style.css,
+            # /style.css, /css/style.css, /ccs/style.css, etc.)
+            sed -i -E "s|(href=\"[a-zA-Z0-9_/-]+\.css)(\?v=[a-zA-Z0-9]+)?\"|\1?v=${SHA}\"|g" "$FILE"
+
+            echo "---- $FILE: resulting asset tags ----"
+            grep 'src="/js/' "$FILE" || echo "(no JS tags found)"
+            grep -E 'href="[a-zA-Z0-9_/-]+\.css' "$FILE" || echo "(no CSS tags found)"
+
+            # Safety checks: fail the build if the number of successfully
+            # versioned tags doesn't match how many were there beforehand,
+            # so a silent regex miss (renamed path, changed quoting, new
+            # subfolder, etc.) is caught here instead of shipping a
+            # mismatched-version bug to players.
+            JS_AFTER=$(grep -oE 'src="/js/[a-zA-Z0-9_-]+\.js\?v='"${SHA}"'"' "$FILE" | wc -l)
+            CSS_AFTER=$(grep -oE 'href="[a-zA-Z0-9_/-]+\.css\?v='"${SHA}"'"' "$FILE" | wc -l)
+
+            echo "$FILE: JS versioned tags: $JS_AFTER (expected: $JS_BEFORE)"
+            echo "$FILE: CSS versioned tags: $CSS_AFTER (expected: $CSS_BEFORE)"
+
+            if [ "$JS_AFTER" -ne "$JS_BEFORE" ]; then
+              echo "::error::$FILE — expected $JS_BEFORE versioned JS tags but found $JS_AFTER. Check for renamed/reformatted script tags."
+              exit 1
+            fi
+            if [ "$CSS_AFTER" -ne "$CSS_BEFORE" ]; then
+              echo "::error::$FILE — expected $CSS_BEFORE versioned CSS tags but found $CSS_AFTER. Check for renamed/reformatted stylesheet tags."
+              exit 1
+            fi
+          done
+
+          # Global sanity check: if not a single CSS tag was found across
+          # every file, that's suspicious for a project that definitely
+          # uses CSS — likely means the pattern doesn't match your actual
+          # href syntax. A 0-before/0-after per-file check can't catch
+          # this on its own since 0 == 0 never trips the mismatch check.
+          if [ "$TOTAL_CSS_BEFORE" -eq 0 ]; then
+            echo "::error::No CSS <link> tags matched in any file. Check that href values look like href=\"style.css\" or href=\"/style.css\"."
+            exit 1
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    # Extra guard: even if this workflow is ever manually triggered from
+    # another branch, only an actual dev-branch run is allowed to deploy.
+    if: github.ref == 'refs/heads/dev'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

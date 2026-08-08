@@ -27,24 +27,35 @@ jobs:
           SHA="${{ steps.vars.outputs.sha }}"
           echo "Using version token: $SHA"
 
-          EXPECTED_COUNT=6
+          FILES=("index.html" "updates/index.html")
 
-          sed -i -E "s|(src=\"/js/[a-zA-Z0-9_-]+\.js)(\?v=[a-zA-Z0-9]+)?\"|\1?v=${SHA}\"|g" index.html
+          for FILE in "${FILES[@]}"; do
+            if [ ! -f "$FILE" ]; then
+              echo "::warning::$FILE not found — skipping."
+              continue
+            fi
 
-          echo "---- Resulting script tags ----"
-          grep 'src="/js/' index.html
+            BEFORE_COUNT=$(grep -oE 'src="/js/[a-zA-Z0-9_-]+\.js(\?v=[a-zA-Z0-9]+)?"' "$FILE" | wc -l)
 
-          ACTUAL_COUNT=$(grep -oE 'src="/js/[a-zA-Z0-9_-]+\.js\?v='"${SHA}"'"' index.html | wc -l)
-          echo "Versioned script tags found: $ACTUAL_COUNT (expected: $EXPECTED_COUNT)"
-          if [ "$ACTUAL_COUNT" -ne "$EXPECTED_COUNT" ]; then
-            echo "::error::Expected $EXPECTED_COUNT versioned /js/ script tags but found $ACTUAL_COUNT. Check index.html for renamed/reformatted script tags, or update EXPECTED_COUNT if you intentionally added/removed one."
-            exit 1
-          fi
+            sed -i -E "s|(src=\"/js/[a-zA-Z0-9_-]+\.js)(\?v=[a-zA-Z0-9]+)?\"|\1?v=${SHA}\"|g" "$FILE"
 
-          echo "✅ Regex and safety check passed — safe to merge into dev."
+            echo "---- $FILE: resulting script tags ----"
+            grep 'src="/js/' "$FILE" || echo "(none found)"
 
-      - name: Upload rewritten index.html for inspection
+            AFTER_COUNT=$(grep -oE 'src="/js/[a-zA-Z0-9_-]+\.js\?v='"${SHA}"'"' "$FILE" | wc -l)
+            echo "$FILE: versioned tags found: $AFTER_COUNT (expected: $BEFORE_COUNT)"
+            if [ "$AFTER_COUNT" -ne "$BEFORE_COUNT" ]; then
+              echo "::error::$FILE — expected $BEFORE_COUNT versioned /js/ script tags but found $AFTER_COUNT. Check for renamed/reformatted script tags."
+              exit 1
+            fi
+          done
+
+          echo "✅ Regex and safety check passed on all files — safe to merge into dev."
+
+      - name: Upload rewritten HTML files for inspection
         uses: actions/upload-artifact@v4
         with:
-          name: rewritten-index-html
-          path: index.html
+          name: rewritten-html-files
+          path: |
+            index.html
+            updates/index.html

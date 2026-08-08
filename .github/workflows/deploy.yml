@@ -37,9 +37,14 @@ jobs:
 
           # Regex patterns:
           #   JS:  src="/js/whatever.js" or src="/js/whatever.js?v=OLD"
-          #   CSS: href="/whatever.css"  or href="/whatever.css?v=OLD"
+          #   CSS: href="anything/here/style.css" — matches any path depth
+          #        (root, /css/, /ccs/, nested, relative or absolute) since
+          #        guessing the exact folder name has already caused one
+          #        silent miss (root guess, then /ccs/ vs /css/ guess).
           JS_PATTERN='src="/js/[a-zA-Z0-9_-]+\.js(\?v=[a-zA-Z0-9]+)?"'
-          CSS_PATTERN='href="/[a-zA-Z0-9_-]+\.css(\?v=[a-zA-Z0-9]+)?"'
+          CSS_PATTERN='href="[a-zA-Z0-9_/-]+\.css(\?v=[a-zA-Z0-9]+)?"'
+
+          TOTAL_CSS_BEFORE=0
 
           for FILE in "${FILES[@]}"; do
             if [ ! -f "$FILE" ]; then
@@ -52,17 +57,18 @@ jobs:
             # can drift out of date.
             JS_BEFORE=$(grep -oE "$JS_PATTERN" "$FILE" | wc -l)
             CSS_BEFORE=$(grep -oE "$CSS_PATTERN" "$FILE" | wc -l)
+            TOTAL_CSS_BEFORE=$((TOTAL_CSS_BEFORE + CSS_BEFORE))
 
             # Rewrite JS src= tags
             sed -i -E "s|(src=\"/js/[a-zA-Z0-9_-]+\.js)(\?v=[a-zA-Z0-9]+)?\"|\1?v=${SHA}\"|g" "$FILE"
 
-            # Rewrite CSS href= tags (covers style.css, updates.css, etc.)
-            sed -i -E "s|(href=\"/[a-zA-Z0-9_-]+\.css)(\?v=[a-zA-Z0-9]+)?\"|\1?v=${SHA}\"|g" "$FILE"
+            # Rewrite CSS href= tags at any path depth (style.css,
+            # /style.css, /css/style.css, /ccs/style.css, etc.)
+            sed -i -E "s|(href=\"[a-zA-Z0-9_/-]+\.css)(\?v=[a-zA-Z0-9]+)?\"|\1?v=${SHA}\"|g" "$FILE"
 
             echo "---- $FILE: resulting asset tags ----"
-            grep -E 'src="/js/|href="/[a-zA-Z0-9_-]+\.css"' "$FILE" || true
             grep 'src="/js/' "$FILE" || echo "(no JS tags found)"
-            grep -E 'href="/[a-zA-Z0-9_-]+\.css' "$FILE" || echo "(no CSS tags found)"
+            grep -E 'href="[a-zA-Z0-9_/-]+\.css' "$FILE" || echo "(no CSS tags found)"
 
             # Safety checks: fail the build if the number of successfully
             # versioned tags doesn't match how many were there beforehand,
@@ -70,7 +76,7 @@ jobs:
             # subfolder, etc.) is caught here instead of shipping a
             # mismatched-version bug to players.
             JS_AFTER=$(grep -oE 'src="/js/[a-zA-Z0-9_-]+\.js\?v='"${SHA}"'"' "$FILE" | wc -l)
-            CSS_AFTER=$(grep -oE 'href="/[a-zA-Z0-9_-]+\.css\?v='"${SHA}"'"' "$FILE" | wc -l)
+            CSS_AFTER=$(grep -oE 'href="[a-zA-Z0-9_/-]+\.css\?v='"${SHA}"'"' "$FILE" | wc -l)
 
             echo "$FILE: JS versioned tags: $JS_AFTER (expected: $JS_BEFORE)"
             echo "$FILE: CSS versioned tags: $CSS_AFTER (expected: $CSS_BEFORE)"
@@ -84,6 +90,16 @@ jobs:
               exit 1
             fi
           done
+
+          # Global sanity check: if not a single CSS tag was found across
+          # every file, that's suspicious for a project that definitely
+          # uses CSS — likely means the pattern doesn't match your actual
+          # href syntax. A 0-before/0-after per-file check can't catch
+          # this on its own since 0 == 0 never trips the mismatch check.
+          if [ "$TOTAL_CSS_BEFORE" -eq 0 ]; then
+            echo "::error::No CSS <link> tags matched in any file. Check that href values look like href=\"style.css\" or href=\"/style.css\"."
+            exit 1
+          fi
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

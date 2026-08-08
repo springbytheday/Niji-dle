@@ -415,3 +415,130 @@ button.show-more:hover {
   .stat { padding: 14px; }
   .updates-body h1 { font-size: 2.65rem; }
 }
+
+/* ==================================================================
+   status.css
+   Layout only, for the ticket status lookup page. Assumes style.css
+   is loaded first and reuses its tokens (--bg-raised, --border,
+   --text-dim, --focus, --hit, --partial, --another_partial, --miss,
+   --font-display, --font-mono) rather than defining new ones.
+   ================================================================== */
+
+.status-stage {
+  max-width: 520px;
+}
+
+.status-card {
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 28px 24px;
+  margin-top: 12px;
+}
+
+.status-title {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  margin: 0 0 8px;
+}
+
+.status-sub {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0 0 20px;
+}
+
+.status-mono {
+  font-family: var(--font-mono);
+}
+
+.status-form {
+  display: flex;
+  gap: 8px;
+}
+
+#ticket-input {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  font-family: var(--font-mono);
+  font-size: 15px;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  outline: none;
+}
+
+#ticket-input:focus {
+  border-color: var(--focus);
+}
+
+.status-check-btn {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.status-result {
+  margin-top: 20px;
+}
+
+.status-result-card {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  background: var(--bg);
+}
+
+.status-result-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  margin: 0 0 8px;
+}
+
+.status-pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.status-pill--received { background: var(--unknown); color: #fff; }
+.status-pill--planned { background: var(--focus); color: #fff; }
+.status-pill--in_progress { background: var(--partial); color: #1a1300; }
+.status-pill--testing { background: var(--another_partial); color: #1a1300; }
+.status-pill--done { background: var(--hit); color: #fff; }
+.status-pill--wontfix { background: var(--miss); color: var(--text); }
+
+.status-response {
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--text);
+  margin: 0;
+}
+
+.status-response-label {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+
+.status-updated {
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin-top: 12px;
+}
+
+.status-error,
+.status-empty {
+  color: var(--text-dim);
+  font-size: 0.88rem;
+  padding: 8px 2px;
+}

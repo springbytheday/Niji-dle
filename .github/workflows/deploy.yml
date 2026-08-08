@@ -1,0 +1,72 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get short SHA
+        id: vars
+        run: echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Inject cache-busting version on script tags
+        run: |
+          SHA="${{ steps.vars.outputs.sha }}"
+          echo "Using version token: $SHA"
+
+          # Expected number of local (/js/...) script tags — update this
+          # if you add or remove a <script src="/js/..."> line in index.html.
+          EXPECTED_COUNT=6
+
+          # Matches src="/js/whatever.js" or src="/js/whatever.js?v=OLDTOKEN"
+          # and rewrites it to src="/js/whatever.js?v=SHA"
+          sed -i -E "s|(src=\"/js/[a-zA-Z0-9_-]+\.js)(\?v=[a-zA-Z0-9]+)?\"|\1?v=${SHA}\"|g" index.html
+
+          echo "---- Resulting script tags ----"
+          grep 'src="/js/' index.html
+
+          # Safety check: fail the build if the count of versioned tags
+          # doesn't match expectations, so a silent regex miss (renamed
+          # path, changed quoting, new subfolder, etc.) is caught here
+          # instead of shipping a mismatched-version bug to players.
+          ACTUAL_COUNT=$(grep -oE 'src="/js/[a-zA-Z0-9_-]+\.js\?v='"${SHA}"'"' index.html | wc -l)
+          echo "Versioned script tags found: $ACTUAL_COUNT (expected: $EXPECTED_COUNT)"
+          if [ "$ACTUAL_COUNT" -ne "$EXPECTED_COUNT" ]; then
+            echo "::error::Expected $EXPECTED_COUNT versioned /js/ script tags but found $ACTUAL_COUNT. Check index.html for renamed/reformatted script tags, or update EXPECTED_COUNT if you intentionally added/removed one."
+            exit 1
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    # Extra guard: even if this workflow is ever manually triggered from
+    # another branch, only an actual dev-branch run is allowed to deploy.
+    if: github.ref == 'refs/heads/dev'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

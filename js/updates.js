@@ -55,7 +55,14 @@ const UPDATES = [
     footerLeft: 'Gathering Data',
     footerRight: 'Active',
   },
-
+  {
+    title: '? in color column after update',
+    description: 'Due to code update and mismatch code version, colors in column are appearing as ?',
+    type: 'bug',
+    status: 'progress',
+    footerLeft: 'Troubleshooting',
+    footerRight: 'Active',
+  },
   // ---- Testing ----
 
 
@@ -250,7 +257,8 @@ function applyVisibility(cards) {
     });
 
     updateColumnToggle(status, visibleInColumn);
-  });
+    });
+    updateCount(cards);
 }
 
 function setupFilters(cards) {
@@ -266,6 +274,22 @@ function setupFilters(cards) {
       STATUSES.forEach((status) => { expandedState[status] = false; });
       applyVisibility(cards);
     });
+  });
+
+}
+
+function updateCount(cards) {
+  
+  const filterPassed = (card) =>
+    currentFilter === 'all' || card.dataset.type === currentFilter;
+ 
+  STATUSES.forEach((status) => {
+    const count = cards.filter((card) =>
+      card.dataset.status === status && filterPassed(card)
+    ).length;
+ 
+    const element = document.querySelector(`[data-count="${status}"]`);
+    if (element) element.textContent = count;
   });
 }
 

@@ -25,15 +25,21 @@ jobs:
         id: vars
         run: echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Inject cache-busting version on script tags
+      - name: Inject cache-busting version on script and stylesheet tags
         run: |
           SHA="${{ steps.vars.outputs.sha }}"
           echo "Using version token: $SHA"
 
-          # List every HTML file that loads /js/*.js scripts and needs
-          # cache-busting. Add more paths here if you create additional
-          # pages that load local scripts.
+          # List every HTML file that loads local /js/*.js scripts and/or
+          # /*.css stylesheets and needs cache-busting. Add more paths here
+          # if you create additional pages that load local assets.
           FILES=("index.html" "updates/index.html")
+
+          # Regex patterns:
+          #   JS:  src="/js/whatever.js" or src="/js/whatever.js?v=OLD"
+          #   CSS: href="/whatever.css"  or href="/whatever.css?v=OLD"
+          JS_PATTERN='src="/js/[a-zA-Z0-9_-]+\.js(\?v=[a-zA-Z0-9]+)?"'
+          CSS_PATTERN='href="/[a-zA-Z0-9_-]+\.css(\?v=[a-zA-Z0-9]+)?"'
 
           for FILE in "${FILES[@]}"; do
             if [ ! -f "$FILE" ]; then
@@ -41,27 +47,40 @@ jobs:
               continue
             fi
 
-            # Count how many /js/*.js script tags exist BEFORE rewriting,
-            # so the safety check below is self-derived per file rather
-            # than a hardcoded number that can drift out of date.
-            BEFORE_COUNT=$(grep -oE 'src="/js/[a-zA-Z0-9_-]+\.js(\?v=[a-zA-Z0-9]+)?"' "$FILE" | wc -l)
+            # Counts BEFORE rewriting, so the safety check below is
+            # self-derived per file rather than a hardcoded number that
+            # can drift out of date.
+            JS_BEFORE=$(grep -oE "$JS_PATTERN" "$FILE" | wc -l)
+            CSS_BEFORE=$(grep -oE "$CSS_PATTERN" "$FILE" | wc -l)
 
-            # Matches src="/js/whatever.js" or src="/js/whatever.js?v=OLDTOKEN"
-            # and rewrites it to src="/js/whatever.js?v=SHA"
+            # Rewrite JS src= tags
             sed -i -E "s|(src=\"/js/[a-zA-Z0-9_-]+\.js)(\?v=[a-zA-Z0-9]+)?\"|\1?v=${SHA}\"|g" "$FILE"
 
-            echo "---- $FILE: resulting script tags ----"
-            grep 'src="/js/' "$FILE" || echo "(none found)"
+            # Rewrite CSS href= tags (covers style.css, updates.css, etc.)
+            sed -i -E "s|(href=\"/[a-zA-Z0-9_-]+\.css)(\?v=[a-zA-Z0-9]+)?\"|\1?v=${SHA}\"|g" "$FILE"
 
-            # Safety check: fail the build if the number of successfully
+            echo "---- $FILE: resulting asset tags ----"
+            grep -E 'src="/js/|href="/[a-zA-Z0-9_-]+\.css"' "$FILE" || true
+            grep 'src="/js/' "$FILE" || echo "(no JS tags found)"
+            grep -E 'href="/[a-zA-Z0-9_-]+\.css' "$FILE" || echo "(no CSS tags found)"
+
+            # Safety checks: fail the build if the number of successfully
             # versioned tags doesn't match how many were there beforehand,
             # so a silent regex miss (renamed path, changed quoting, new
             # subfolder, etc.) is caught here instead of shipping a
             # mismatched-version bug to players.
-            AFTER_COUNT=$(grep -oE 'src="/js/[a-zA-Z0-9_-]+\.js\?v='"${SHA}"'"' "$FILE" | wc -l)
-            echo "$FILE: versioned tags found: $AFTER_COUNT (expected: $BEFORE_COUNT)"
-            if [ "$AFTER_COUNT" -ne "$BEFORE_COUNT" ]; then
-              echo "::error::$FILE — expected $BEFORE_COUNT versioned /js/ script tags but found $AFTER_COUNT. Check for renamed/reformatted script tags."
+            JS_AFTER=$(grep -oE 'src="/js/[a-zA-Z0-9_-]+\.js\?v='"${SHA}"'"' "$FILE" | wc -l)
+            CSS_AFTER=$(grep -oE 'href="/[a-zA-Z0-9_-]+\.css\?v='"${SHA}"'"' "$FILE" | wc -l)
+
+            echo "$FILE: JS versioned tags: $JS_AFTER (expected: $JS_BEFORE)"
+            echo "$FILE: CSS versioned tags: $CSS_AFTER (expected: $CSS_BEFORE)"
+
+            if [ "$JS_AFTER" -ne "$JS_BEFORE" ]; then
+              echo "::error::$FILE — expected $JS_BEFORE versioned JS tags but found $JS_AFTER. Check for renamed/reformatted script tags."
+              exit 1
+            fi
+            if [ "$CSS_AFTER" -ne "$CSS_BEFORE" ]; then
+              echo "::error::$FILE — expected $CSS_BEFORE versioned CSS tags but found $CSS_AFTER. Check for renamed/reformatted stylesheet tags."
               exit 1
             fi
           done

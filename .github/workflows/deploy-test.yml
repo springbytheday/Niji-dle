@@ -22,12 +22,14 @@ jobs:
         id: vars
         run: echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Inject cache-busting version on script tags
+      - name: Inject cache-busting version on script and stylesheet tags
         run: |
           SHA="${{ steps.vars.outputs.sha }}"
           echo "Using version token: $SHA"
 
           FILES=("index.html" "updates/index.html")
+          JS_PATTERN='src="/js/[a-zA-Z0-9_-]+\.js(\?v=[a-zA-Z0-9]+)?"'
+          CSS_PATTERN='href="/[a-zA-Z0-9_-]+\.css(\?v=[a-zA-Z0-9]+)?"'
 
           for FILE in "${FILES[@]}"; do
             if [ ! -f "$FILE" ]; then
@@ -35,17 +37,28 @@ jobs:
               continue
             fi
 
-            BEFORE_COUNT=$(grep -oE 'src="/js/[a-zA-Z0-9_-]+\.js(\?v=[a-zA-Z0-9]+)?"' "$FILE" | wc -l)
+            JS_BEFORE=$(grep -oE "$JS_PATTERN" "$FILE" | wc -l)
+            CSS_BEFORE=$(grep -oE "$CSS_PATTERN" "$FILE" | wc -l)
 
             sed -i -E "s|(src=\"/js/[a-zA-Z0-9_-]+\.js)(\?v=[a-zA-Z0-9]+)?\"|\1?v=${SHA}\"|g" "$FILE"
+            sed -i -E "s|(href=\"/[a-zA-Z0-9_-]+\.css)(\?v=[a-zA-Z0-9]+)?\"|\1?v=${SHA}\"|g" "$FILE"
 
-            echo "---- $FILE: resulting script tags ----"
-            grep 'src="/js/' "$FILE" || echo "(none found)"
+            echo "---- $FILE: resulting asset tags ----"
+            grep 'src="/js/' "$FILE" || echo "(no JS tags found)"
+            grep -E 'href="/[a-zA-Z0-9_-]+\.css' "$FILE" || echo "(no CSS tags found)"
 
-            AFTER_COUNT=$(grep -oE 'src="/js/[a-zA-Z0-9_-]+\.js\?v='"${SHA}"'"' "$FILE" | wc -l)
-            echo "$FILE: versioned tags found: $AFTER_COUNT (expected: $BEFORE_COUNT)"
-            if [ "$AFTER_COUNT" -ne "$BEFORE_COUNT" ]; then
-              echo "::error::$FILE — expected $BEFORE_COUNT versioned /js/ script tags but found $AFTER_COUNT. Check for renamed/reformatted script tags."
+            JS_AFTER=$(grep -oE 'src="/js/[a-zA-Z0-9_-]+\.js\?v='"${SHA}"'"' "$FILE" | wc -l)
+            CSS_AFTER=$(grep -oE 'href="/[a-zA-Z0-9_-]+\.css\?v='"${SHA}"'"' "$FILE" | wc -l)
+
+            echo "$FILE: JS versioned tags: $JS_AFTER (expected: $JS_BEFORE)"
+            echo "$FILE: CSS versioned tags: $CSS_AFTER (expected: $CSS_BEFORE)"
+
+            if [ "$JS_AFTER" -ne "$JS_BEFORE" ]; then
+              echo "::error::$FILE — expected $JS_BEFORE versioned JS tags but found $JS_AFTER. Check for renamed/reformatted script tags."
+              exit 1
+            fi
+            if [ "$CSS_AFTER" -ne "$CSS_BEFORE" ]; then
+              echo "::error::$FILE — expected $CSS_BEFORE versioned CSS tags but found $CSS_AFTER. Check for renamed/reformatted stylesheet tags."
               exit 1
             fi
           done

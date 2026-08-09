@@ -1,0 +1,82 @@
+name: Test Cache-Busting (no deploy)
+
+# Safe to run on any branch. Does NOT deploy to GitHub Pages —
+# it only runs the same sed rewrite + safety check as deploy.yml
+# and lets you inspect the result before it ever goes live.
+on:
+  push:
+    branches-ignore: [dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get short SHA
+        id: vars
+        run: echo "sha=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Inject cache-busting version on script and stylesheet tags
+        run: |
+          SHA="${{ steps.vars.outputs.sha }}"
+          echo "Using version token: $SHA"
+
+          FILES=("index.html" "updates/index.html")
+          JS_PATTERN='src="/js/[a-zA-Z0-9_-]+\.js(\?v=[a-zA-Z0-9]+)?"'
+          CSS_PATTERN='href="[a-zA-Z0-9_/-]+\.css(\?v=[a-zA-Z0-9]+)?"'
+
+          TOTAL_CSS_BEFORE=0
+
+          for FILE in "${FILES[@]}"; do
+            if [ ! -f "$FILE" ]; then
+              echo "::warning::$FILE not found — skipping."
+              continue
+            fi
+
+            JS_BEFORE=$(grep -oE "$JS_PATTERN" "$FILE" | wc -l)
+            CSS_BEFORE=$(grep -oE "$CSS_PATTERN" "$FILE" | wc -l)
+            TOTAL_CSS_BEFORE=$((TOTAL_CSS_BEFORE + CSS_BEFORE))
+
+            sed -i -E "s|(src=\"/js/[a-zA-Z0-9_-]+\.js)(\?v=[a-zA-Z0-9]+)?\"|\1?v=${SHA}\"|g" "$FILE"
+            sed -i -E "s|(href=\"[a-zA-Z0-9_/-]+\.css)(\?v=[a-zA-Z0-9]+)?\"|\1?v=${SHA}\"|g" "$FILE"
+
+            echo "---- $FILE: resulting asset tags ----"
+            grep 'src="/js/' "$FILE" || echo "(no JS tags found)"
+            grep -E 'href="[a-zA-Z0-9_/-]+\.css' "$FILE" || echo "(no CSS tags found)"
+
+            JS_AFTER=$(grep -oE 'src="/js/[a-zA-Z0-9_-]+\.js\?v='"${SHA}"'"' "$FILE" | wc -l)
+            CSS_AFTER=$(grep -oE 'href="[a-zA-Z0-9_/-]+\.css\?v='"${SHA}"'"' "$FILE" | wc -l)
+
+            echo "$FILE: JS versioned tags: $JS_AFTER (expected: $JS_BEFORE)"
+            echo "$FILE: CSS versioned tags: $CSS_AFTER (expected: $CSS_BEFORE)"
+
+            if [ "$JS_AFTER" -ne "$JS_BEFORE" ]; then
+              echo "::error::$FILE — expected $JS_BEFORE versioned JS tags but found $JS_AFTER. Check for renamed/reformatted script tags."
+              exit 1
+            fi
+            if [ "$CSS_AFTER" -ne "$CSS_BEFORE" ]; then
+              echo "::error::$FILE — expected $CSS_BEFORE versioned CSS tags but found $CSS_AFTER. Check for renamed/reformatted stylesheet tags."
+              exit 1
+            fi
+          done
+
+          if [ "$TOTAL_CSS_BEFORE" -eq 0 ]; then
+            echo "::error::No CSS <link> tags matched in any file. Check that href values look like href=\"style.css\" or href=\"/style.css\"."
+            exit 1
+          fi
+
+          echo "✅ Regex and safety check passed on all files — safe to merge into dev."
+
+      - name: Upload rewritten HTML files for inspection
+        uses: actions/upload-artifact@v4
+        with:
+          name: rewritten-html-files
+          path: |
+            index.html
+            updates/index.html

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Niji-Dle &mdash; Daily Nijisanji Guessing Game</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <script>
+    //To set theme
+    (function () {
+      try {
+        var saved = localStorage.getItem('nijidle_theme');
+        if (saved === 'dark' || saved === 'light') {
+          document.documentElement.setAttribute('data-theme', saved);
+        }
+      } catch (e) {
+      }
+    })();
+  </script>
+</head>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-FBXSHNCT52"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag() { dataLayer.push(arguments); }
+  gtag('js', new Date());
+
+  gtag('config', 'G-FBXSHNCT52');
+</script>
+
+<body>
+  <div class="stage">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">Niji-Dle</span>
+      </div>
+      <div class="topbar-actions">
+        <button id="info-button" class="icon-button" type="button" aria-label="Information" aria-haspopup="dialog">
+          <span aria-hidden="true" style="font-style: italic;">i</span>
+        </button>
+        <button id="help-button" class="icon-button" type="button" aria-label="How to play" aria-haspopup="dialog">
+          <span aria-hidden="true">?</span>
+        </button>
+        <button id="theme-toggle" class="icon-button" type="button" aria-label="Toggle light/dark theme">
+          <span id="theme-toggle-icon" aria-hidden="true">&#9788;</span>
+        </button>
+      </div>
+    </header>
+    <div id="announcement-overlay" class="overlay-overlay">
+      <div id="announcement-popup" class="overlay-dialog" role="dialog" aria-modal="true"
+        aria-labelledby="overlay-title">
+        <button id="announcement-close" class="overlay-close" aria-label="Close">&times;</button>
+
+        <h2 id="announcement-title" class="overlay-title">📢 Announcement</h2>
+
+        <p class="overlay-text">
+          New Update!
+          <br />
+          A tooltip displaying the color family has been added.
+          This will assist in identifying the correct family, especially for hard to tell colors.
+          <br />
+          If you get ? for the colors in your first guess, please give your website a refresh or close the tab and open
+          a new one. The code has changed and needs to be refreshed.
+          <br />
+          📱 For mobile users, click on the color.
+          <br />
+          🖥 For desktop users, hover over the color.
+          <br /><br />
+          Upcoming updates to expect would include a branch selector for unlimited mode meaning you can just play with
+          EN or a mix like EN & Ex-ID, etc... Soon, I'll have a dev updates pages that yall can check out!
+        </p>
+
+        <!--
+        <p class="overlay-text">Thank you for playing Niji-Dle ❤︎</p>
+          <a href="URL" target="_blank" rel="noopener noreferrer" class="overlay-link">
+          Take the survey
+        </a>
+        -->
+      </div>
+    </div>
+    <div id="tutorial-overlay" class="overlay-overlay">
+      <div id="tutorial-dialog" class="overlay-dialog" role="dialog" aria-modal="true" aria-labelledby="tutorial-title"
+        tabindex="-1">
+        <button id="tutorial-close" class="overlay-close" type="button" aria-label="Close tutorial">
+          &times;
+        </button>
+
+        <h2 id="tutorial-title" class="overlay-title">How to play Niji-Dle</h2>
+
+        <p class="overlay-text">
+          Try to guess the Nijisanji liver using the hints provided - Debut Year, Gender, Species and Liver Color.
+        </p>
+
+        <ul class="overlay-legend">
+          <li>
+            <strong>Match</strong> &mdash;
+            <span class="legend-swatch legend-swatch--hit"></span>
+            this attribute is exactly right.
+          </li>
+          <li>
+            <strong>Partial</strong>&mdash;
+            <span class="legend-swatch legend-swatch--partial"></span>
+            is for same color family and
+            species sharing a word like &ldquo;human&rdquo;.
+            <span class="legend-swatch legend-swatch--another_partial"></span> is specifically for neighbouring colors
+            like purple and teal for blue.
+          </li>
+          <li>
+            <strong>No match</strong> &mdash;
+            <span class="legend-swatch legend-swatch--miss"></span>
+            not related to the answer.
+          </li>
+        </ul>
+        <p class="overlay-text">
+          For debut year, &uarr; indicates a later year while &darr; indicates an earlier year.
+        </p>
+        <p class="overlay-text">
+          Niji-Dle resets at 00:00 in your localtime.
+        </p>
+        <button id="tutorial-start" class="overlay-start" type="button">
+          Got it, let&rsquo;s play
+        </button>
+      </div>
+    </div>
+
+    <div id="overlay-overlay" class="overlay-overlay">
+      <div id="overlay-dialog" class="overlay-dialog" role="dialog" aria-modal="true" aria-labelledby="overlay-title"
+        tabindex="-1">
+        <button id="overlay-close" class="overlay-close" type="button" aria-label="Close overlay">
+          &times;
+        </button>
+
+        <!-- Tab strip -->
+        <div class="overlay-tabs" role="tablist">
+          <button class="overlay-tab overlay-tab--active" role="tab" aria-selected="true" aria-controls="tab-colors"
+            data-tab="colors" type="button">Colors</button>
+          <button class="overlay-tab" role="tab" aria-selected="false" aria-controls="tab-species" data-tab="species"
+            type="button">Data</button>
+          <button class="overlay-tab" role="tab" aria-selected="false" aria-controls="tab-info" data-tab="info"
+            type="button">About</button>
+        </div>
+
+        <!-- Tab: Colors -->
+        <div id="tab-colors" class="overlay-panel" role="tabpanel">
+          <h2 id="overlay-title" class="overlay-title">Colors</h2>
+          <p class="overlay-text">Colors will get a yellow <span class="legend-swatch legend-swatch--partial"></span>
+            partial match when they are in the same family and an orange <span
+              class="legend-swatch legend-swatch--another_partial"></span>
+            partial match when they are neighbouring classes. Below shows the
+            neighbouring colors for the two groups, chromatic and achromatic colors.</p>
+          <p class="overlay-text">If you liked to see which livers are in which color family, you can click
+            <a class="overlay-link"
+              href="https://docs.google.com/spreadsheets/d/1aRGuWlfZnVYysl0xETWDgk6urrgs6egJVP9c28aa37M/edit?usp=sharing">here</a>
+
+          </p>
+          <p class="overlay-text">Chromatic
+          </p>
+          <div id="wheel">
+          </div>
+          <p class="overlay-text">Achromatic</p>
+          <div class="achromatic" id="achromatic">
+          </div>
+        </div>
+
+        <!-- Tab: Information -->
+        <div id="tab-info" class="overlay-panel overlay-panel--hidden" role="tabpanel">
+          <h2 class="overlay-title">Information</h2>
+          <p class="overlay-text">
+            Greatly inspired by wordle, loldle, genshindle.
+            </br></br>
+            Data is manually handled and might have errors or inconsistencies. Especially for species, please excuse any
+            weird categorization. Suggestions are greatly welcomed.
+            <br />
+            Thank you to the amazing fans who had helped with gathering the data.
+            <br /><br />
+            Google Analytics has been added to Niji-Dle to understand web traffic and other stuff.
+          </p>
+
+          <p class="overlay-text">If you notice any mistakes or would like to make any
+            suggestions, please fill in our
+            <a class="overlay-link" href="https://forms.gle/bh3GgWXefc9dMcMg7">feedback form here.</a>
+          </p>
+        </div>
+
+        <!-- Tab: Stats -->
+        <div id="tab-species" class="overlay-panel overlay-panel--hidden" role="tabpanel">
+          <h2 class="overlay-title">Species</h2>
+          <p class="overlay-text">The possible data for species can include:
+          </p>
+          <ul>
+            <li class="overlay-text">Human</li>
+            <li class="overlay-text">Mythical Being</li>
+            <li class="overlay-text">Divine Being</li>
+            <li class="overlay-text">Animal</li>
+            <li class="overlay-text">Yokai</li>
+            <li class="overlay-text">Demon</li>
+          </ul>
+          <p class="overlay-text">All except demon can have additional details such as: Animals - Penguin, Divine Being:
+            Angel, Mythical Being: Cerberus, Yokai: Karasu Tengu, Magicborn Human</p>
+          <h2 class="overlay-title">Gender</h2>
+          <p class="overlay-text">There are 4 possible categories</p>
+          <ul>
+            <li class="overlay-text">Male</li>
+            <li class="overlay-text">Female</li>
+            <li class="overlay-text">Ambigious</li>
+            <li class="overlay-text">Unknown</li>
+          </ul>
+          <p class="overlay-text">If you'd like to know the current data, you can view the data tab
+            <a class="overlay-link"
+              href="https://docs.google.com/spreadsheets/d/1aRGuWlfZnVYysl0xETWDgk6urrgs6egJVP9c28aa37M/edit?usp=sharing">here</a>
+          </p>
+
+        </div>
+
+      </div>
+    </div>
+
+    <main class="game">
+      <div class="mode-tabs" role="tablist">
+        <button id="mode-daily" class="mode-tab mode-tab--active" role="tab" aria-selected="true" type="button"
+          onclick="switchMode('daily')">Daily</button>
+        <button id="mode-unlimited" class="mode-tab" role="tab" aria-selected="false" type="button"
+          onclick="switchMode('unlimited')">Unlimited</button>
+      </div>
+
+      <p class="prompt">Guess the Nijisanji liver</p>
+
+      <div class="guess-box">
+        <input id="guess-input" type="text" autocomplete="off" placeholder="Type a liver name&hellip;"
+          aria-label="Guess a liver" />
+        <div id="suggestions" class="suggestions" role="listbox"></div>
+      </div>
+
+      <div id="end-banner" class="end-banner"></div>
+
+      <section id="board" class="board" aria-live="polite">
+        <div class="empty-state">
+          <p>Loading livers&hellip;</p>
+        </div>
+      </section>
+
+      <footer class="legend">
+        <span class="legend-item"><span class="legend-swatch legend-swatch--hit"></span> Match</span>
+        <span class="legend-item"><span class="legend-swatch legend-swatch--partial"></span> Partial</span>
+        <span class="legend-item"><span class="legend-swatch legend-swatch--another_partial"></span> Neighbouring
+          Color</span>
+        <span class="legend-item"><span class="legend-swatch legend-swatch--miss"></span> No match</span>
+        <span class="legend-item"><span class=" arrow">&darr;</span> Earlier</span>
+        <span class="legend-item"><span class=" arrow">&uarr;</span> Later</span>
+      </footer>
+    </main>
+
+    <footer class="site-footer">
+      <p class="footer-disclaimer">
+        Niji-Dle is an unofficial fan project and is not affiliated with ANYCOLOR Inc, NIJISANJI Project or any other
+        related companies.
+      </p>
+      <p class="footer-text">Spotted any mistakes or have a suggestion?</p>
+      <a id="feedback-link" class="footer-feedback-link" href="https://forms.gle/bh3GgWXefc9dMcMg7" target="_blank"
+        rel="noopener noreferrer">
+        Link to Google Form
+      </a>
+      <br />
+      <a id="discord-link" class="footer-discord-link footer-feedback-link" href="https://discord.gg/9r8avqkqtn"
+        target="_blank" rel="noopener noreferrer" aria-label="Join our Discord server">
+        <svg class="discord-icon" viewBox="0 0 24 24" width="13" height="13" fill="currentColor" aria-hidden="true">
+          <path
+            d="M20.317 4.369a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.211.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.369a.07.07 0 0 0-.032.027C.533 9.046-.319 13.58.099 18.058a.082.082 0 0 0 .031.056 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.09 14.09 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128c.126-.094.252-.192.372-.291a.074.074 0 0 1 .077-.01c3.927 1.793 8.18 1.793 12.061 0a.073.073 0 0 1 .078.01c.12.099.246.197.373.291a.077.077 0 0 1-.006.128c-.598.35-1.22.647-1.873.892a.076.076 0 0 0-.04.106c.36.698.772 1.363 1.225 1.994a.077.077 0 0 0 .084.028 19.834 19.834 0 0 0 6.001-3.03.077.077 0 0 0 .032-.055c.5-5.177-.838-9.674-3.549-13.662a.061.061 0 0 0-.031-.028zM8.02 15.331c-1.182 0-2.156-1.085-2.156-2.419 0-1.333.955-2.419 2.156-2.419 1.21 0 2.176 1.096 2.156 2.42 0 1.333-.955 2.418-2.156 2.418zm7.974 0c-1.183 0-2.156-1.085-2.156-2.419 0-1.333.955-2.419 2.156-2.419 1.21 0 2.176 1.096 2.156 2.42 0 1.333-.946 2.418-2.156 2.418z" />
+        </svg>
+        Join our Discord
+      </a>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/js/supabase-client.js"></script>
+  <script src="/js/game.js"></script>
+  <script src="/js/ui.js"></script>
+  <script src="/js/theme.js"></script>
+  <script src="/js/modal.js"></script>
+  <script src="/js/announcement.js"></script>
+  <script>
+    initGame();
+  </script>
+</body>
+
+</html>

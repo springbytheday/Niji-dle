@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Niji-Dle development updates, progress and roadmap.">
+  <title>Niji-Dle — Development Updates</title>
+
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500;700&display=swap"
+    rel="stylesheet" />
+
+  <!-- Site-wide design tokens (colors, fonts, light/dark theme) -->
+  <link rel="stylesheet" href="/css/style.css" />
+  <!-- Layout/components for this page, built on top of style.css's tokens -->
+  <link rel="stylesheet" href="/css/updates.css" />
+
+  <script>
+    // Apply any saved theme before paint, same as the main site.
+    (function () {
+      try {
+        var saved = localStorage.getItem('nijidle_theme');
+        if (saved === 'dark' || saved === 'light') {
+          document.documentElement.setAttribute('data-theme', saved);
+        }
+      } catch (e) { }
+    })();
+  </script>
+</head>
+
+<body class="updates-body">
+  <div class="wrap">
+    <header>
+      <div class="updates-topbar">
+        <span class="brand-mark">Niji-Dle</span>
+        <div class="topbar-side">
+          <a class="back" href="/">&larr; Back to main site</a>
+          <button id="theme-toggle" class="icon-button" type="button" aria-label="Toggle light/dark theme">
+            <span id="theme-toggle-icon" aria-hidden="true">&#9788;</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="hero">
+        <h1>What I'm building.</h1>
+        <p>
+          A public look at Niji-Dle's development — what's planned, what's being
+          built, what's being tested, and what's already shipped.
+        </p>
+      </div>
+      <!--
+      <div class="stats">
+        <div class="stat">
+          <strong id="totalCount">0</strong>
+          <span>Total updates</span>
+        </div>
+        <div class="stat">
+          <strong id="activeCount">0</strong>
+          <span>Currently active</span>
+        </div>
+        <div class="stat">
+          <strong id="doneCount">0</strong>
+          <span>Completed</span>
+        </div>
+      </div>
+      -->
+    </header>
+
+    <main>
+      <div class="status-card">
+        <h2 class="status-title">Check your report</h2>
+        <p class="status-sub">
+          Enter the ticket ID you got when you submitted a bug or suggestion.
+          It looks like <span class="status-mono">NJD-AB12C3</span>.
+        </p>
+
+        <form id="status-form" class="status-form">
+          <input id="ticket-input" type="text" autocomplete="off" placeholder="NJD-XXXXXX" aria-label="Ticket ID"
+            maxlength="20" />
+          <button type="submit" class="share-button status-check-btn">Check status</button>
+        </form>
+
+        <div id="status-result" class="status-result" aria-live="polite"></div>
+      </div>
+      <div class="toolbar">
+        <div class="filters" aria-label="Filter updates">
+          <button class="filter active" data-filter="all">All</button>
+          <button class="filter" data-filter="feature">Features</button>
+          <button class="filter" data-filter="bug">Bugs</button>
+          <button class="filter" data-filter="design">Design</button>
+          <button class="filter" data-filter="improvement">Improvements</button>
+        </div>
+        <div class="updated">Last updated: <strong>August 8, 2026</strong></div>
+      </div>
+
+      <div class="board">
+        <div class="column planned">
+          <div class="column-head">
+            <div class="column-title"><span class="dot"></span>Planned</div>
+            <span class="count" data-count="planned">0</span>
+          </div>
+          <div class="cards" id="cards-planned"></div>
+          <div id="planned-toggle-wrap"></div>
+        </div>
+
+        <div class="column progress">
+          <div class="column-head">
+            <div class="column-title"><span class="dot"></span>In progress</div>
+            <span class="count" data-count="progress">0</span>
+          </div>
+          <div class="cards" id="cards-progress"></div>
+          <div id="progress-toggle-wrap"></div>
+        </div>
+
+        <div class="column testing">
+          <div class="column-head">
+            <div class="column-title"><span class="dot"></span>Testing</div>
+            <span class="count" data-count="testing">0</span>
+          </div>
+          <div class="cards" id="cards-testing"></div>
+          <div id="testing-toggle-wrap"></div>
+        </div>
+
+        <div class="column done">
+          <div class="column-head">
+            <div class="column-title"><span class="dot"></span>Completed</div>
+            <span class="count" data-count="done">0</span>
+          </div>
+          <div class="cards" id="cards-done"></div>
+          <div id="done-toggle-wrap"></div>
+        </div>
+      </div>
+      <!--
+      <section>
+        <div class="section-title">
+          <div>
+            <h2>Development log</h2>
+            <p>A quick history of recent progress.</p>
+          </div>
+        </div>
+
+        <div class="timeline">
+          <article class="event">
+            <div class="event-date">August 6, 2026</div>
+            <h3>Public development board added</h3>
+            <p>Started publishing the project's roadmap and progress so players can follow along.</p>
+          </article>
+
+          <article class="event">
+            <div class="event-date">July 20, 2026</div>
+            <h3>Major Update 1</h3>
+            <p>Unlimited mode added, color column rework released and data refesh went live</p>
+          </article>
+
+          <article class="event">
+            <div class="event-date">June 27, 2026</div>
+            <h3>Initial release</h3>
+            <p>Niji-Dle went live.</p>
+          </article>
+        </div>
+      </section>
+-->
+      <section>
+        <div class="section-title">
+          <div>
+            <h2>Get in touch</h2>
+            <p>Report bugs, suggest features, or hang out with the community.</p>
+          </div>
+        </div>
+
+        <div class="link-grid" id="link-cards"></div>
+      </section>
+    </main>
+
+    <footer>
+      <div>&copy; 2026 Niji-Dle &middot; This page is a public development roadmap.</div>
+    </footer>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/js/supabase-client.js"></script>
+  <script src="/js/theme.js"></script>
+  <script src="/js/updates.js"></script>
+  <script src="/js/status.js"></script>
+</body>
+
+</html>

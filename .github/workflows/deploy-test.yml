@@ -5,7 +5,7 @@ name: Test Cache-Busting (no deploy)
 # and lets you inspect the result before it ever goes live.
 on:
   push:
-    branches-ignore: [dev]
+    branches-ignore: [main]
   workflow_dispatch:
 
 permissions:

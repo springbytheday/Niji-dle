@@ -110,8 +110,8 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     # Extra guard: even if this workflow is ever manually triggered from
-    # another branch, only an actual dev-branch run is allowed to deploy.
-    if: github.ref == 'refs/heads/dev'
+    # another branch, only an actual main-branch run is allowed to deploy.
+    if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

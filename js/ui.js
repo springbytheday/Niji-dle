@@ -439,7 +439,7 @@ function setupAutocomplete() {
     }
 9
     const guessedIds = new Set(guesses.map((g) => g.liver.id));
-    const matches = alllivers
+    const matches = getGuessablePool()
       .filter((t) => !guessedIds.has(t.id))
       .filter((t) => matchesNamePrefix(t.name, query))
       .slice(0, 8);
@@ -463,7 +463,7 @@ function setupAutocomplete() {
 
 function showAllSuggestions(input, list) {
   const guessedIds = new Set(guesses.map((g) => g.liver.id));
-  const allAvailable = alllivers.filter((t) => !guessedIds.has(t.id));
+  const allAvailable = getGuessablePool().filter((t) => !guessedIds.has(t.id));
   renderSuggestionList(allAvailable, input, list);
 }
 

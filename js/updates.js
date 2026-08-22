@@ -37,15 +37,7 @@ const UPDATES = [
   },
 
   // ---- In progress ----
-  {
-    title: 'Branch selection for unlimited mode',
-    description: 'Building a cleaner dashboard for starting games and seeing recent activity.',
-    type: 'feature',
-    status: 'progress',
-    extraTag: 'Gameplay',
-    footerLeft: 'In progress',
-    footerRight: 'Active',
-  },
+
   {
     title: 'Clues after n tries',
     description: '3 clues to be revealed after n tries, currently gathering data',
@@ -58,11 +50,12 @@ const UPDATES = [
 
   // ---- Testing ----
   {
-    title: '? in color column after update',
-    description: 'Due to code update and mismatch code version, colors in column are appearing as ?',
-    type: 'bug',
+    title: 'Branch selection for unlimited mode',
+    description: 'Building branch selection for unlimited mode',
+    type: 'feature',
     status: 'testing',
-    footerLeft: 'Troubleshooting',
+    extraTag: 'Gameplay',
+    footerLeft: 'In progress',
     footerRight: 'Active',
   },
 
@@ -99,6 +92,14 @@ const UPDATES = [
     footerLeft: 'Shipped',
     footerRight: 'Done',
   },  
+      {
+    title: '? in color column after update',
+    description: 'Due to code update and mismatch code version, colors in column are appearing as ?',
+    type: 'bug',
+    status: 'done',
+    footerLeft: 'Shipped',
+    footerRight: 'Done',
+  },
 ];
 
 const LINKS = [

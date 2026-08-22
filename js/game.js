@@ -3,6 +3,8 @@
 const STORAGE_KEY_PREFIX = 'nijidle_progress_';
 const UNLIMITED_STORAGE_KEY = 'nijidle_unlimited';
 
+const DAILY_BRANCHES = ['en', 'jp', 'ex-kr', 'ex-id'];
+
 let alllivers = [];
 let answerliver = null;
 let guesses = [];
@@ -101,6 +103,19 @@ async function loadlivers() {
   return data;
 }
 
+// Livers that can be typed/selected as a guess in the current mode.
+// Daily is scoped to the same branches the puzzle answer can come from
+// (see get_or_create_daily_puzzle); Unlimited is scoped to whatever
+// branches the player picked in the branch picker — same pool the
+// answer itself was drawn from.
+function getGuessablePool() {
+  if (currentMode === 'daily') {
+    const eligible = alllivers.filter((t) => DAILY_BRANCHES.includes(String(t.branch).toLowerCase()));
+    return eligible.length > 0 ? eligible : alllivers;
+  }
+  return getUnlimitedPool();
+}
+
 function preloadTalentImages(livers) {
   livers.forEach((l) => {
     if (l.image_url) {
@@ -133,9 +148,11 @@ async function resolveDailyAnswer(dateKey, livers) {
 // Last-resort fallback, only used if the RPC call above fails outright
 // ----------------------------------------------------------------
 function resolveDailyAnswerFallback(dateKey, livers) {
+  const eligible = livers.filter((t) => DAILY_BRANCHES.includes(String(t.branch).toLowerCase()));
+  const pool = eligible.length > 0 ? eligible : livers;
   const seed = hashString(dateKey);
-  const index = seed % livers.length;
-  return livers[index];
+  const index = seed % pool.length;
+  return pool[index];
 }
 
 function resolveUnlimitedAnswer(livers) {
@@ -392,9 +409,7 @@ async function switchMode(mode, isInitialLoad = false) {
       gameOver = saved.gameOver;
     }
   } else {
-    // Unlimited: restore a saved in-progress round if one exists,
-    // otherwise pick a fresh random liver.
-    const savedUnlimited = loadUnlimitedProgress();
+     const savedUnlimited = loadUnlimitedProgress();
     if (savedUnlimited) {
       const savedAnswer = alllivers.find((t) => t.id === savedUnlimited.answerId);
       if (savedAnswer) {
@@ -404,8 +419,12 @@ async function switchMode(mode, isInitialLoad = false) {
           .filter(Boolean)
           .map((t) => compareGuess(t, answerliver));
         gameOver = savedUnlimited.gameOver;
+        // Restore the branch filter this round was started with, so a
+        // page reload mid-round doesn't silently reopen guessing to
+        // every branch again.
+        selectedBranches = loadSavedBranches() || getAllBranches();
       } else {
-       // Saved liver no longer in active roster (e.g. was deactivated)
+        // Saved liver no longer in active roster (e.g. was deactivated)
         // — start fresh rather than restoring a broken state.
         clearUnlimitedProgress();
         selectedBranches = await chooseBranches();
@@ -413,7 +432,7 @@ async function switchMode(mode, isInitialLoad = false) {
       }
     } else {
       selectedBranches = await chooseBranches();
-      answerliver = resolveUnlimitedAnswer(alllivers);
+      answerliver = resolveUnlimitedAnswer(getUnlimitedPool());
     }
   }
 
@@ -432,12 +451,13 @@ async function switchMode(mode, isInitialLoad = false) {
 // ----------------------------------------------------------------
 // Unlimited Mode
 // ----------------------------------------------------------------
-function newUnlimitedRound() {
+async function newUnlimitedRound() {
   clearUnlimitedProgress();
   guesses = [];
   gameOver = false;
-  selectedBranches = chooseBranches();
-  answerliver = resolveUnlimitedAnswer(alllivers);
+  selectedBranches = await chooseBranches();
+  answerliver = resolveUnlimitedAnswer(getUnlimitedPool());
+  console.log(answerliver);
   renderBoard();
   setupAutocomplete();
 }

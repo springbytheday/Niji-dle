@@ -518,6 +518,7 @@ button.show-more:hover {
 .status-pill--in_progress { background: var(--partial); color: #1a1300; }
 .status-pill--testing { background: var(--another_partial); color: #1a1300; }
 .status-pill--done { background: var(--hit); color: #fff; }
+.status-pill--resolved { background: var(--hit); color: #fff; }
 .status-pill--wontfix { background: var(--miss); color: var(--text); }
 
 .status-response {

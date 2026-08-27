@@ -153,6 +153,12 @@ button.filter.active {
   overflow-x: auto;
   padding-bottom: 10px;
 }
+.board-loading {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  padding: 8px 2px;
+  margin: 0;
+}
 
 .column {
   min-width: 245px;

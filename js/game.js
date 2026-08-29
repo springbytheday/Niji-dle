@@ -11,6 +11,9 @@ let guesses = [];
 let gameOver = false;
 let currentMode = 'daily'; 
 
+let dailyState = { answer: null, guesses: [], gameOver: false };
+let unlimitedState = { answer: null, guesses: [], gameOver: false };
+
 // ----------------------------------------------------------------
 // Unlimited mode — branch filtering
 // ----------------------------------------------------------------
@@ -384,41 +387,44 @@ async function initGame() {
 
 async function switchMode(mode, isInitialLoad = false) {
   currentMode = mode;
-  guesses = [];
-  gameOver = false;
-  answerliver = null;
-
   updateModeToggle(mode);
 
   if (mode === 'daily') {
     const dateKey = todayKey();
-    answerliver = await resolveDailyAnswer(dateKey, alllivers);
+    const resolved = await resolveDailyAnswer(dateKey, alllivers);
 
-    if (!answerliver) {
+    // Bail if the user left Daily while this RPC was in flight
+    if (currentMode !== 'daily') return;
+
+    if (!resolved) {
       showError('Could not determine today\u2019s puzzle. Please try again later.');
       return;
     }
 
+    dailyState = { answer: resolved, guesses: [], gameOver: false };
+
     // Restore saved daily progress (guesses made earlier today).
     const saved = loadProgress();
-    if (saved && saved.answerId === answerliver.id) {
-      guesses = saved.guessIds
+    if (saved && saved.answerId === resolved.id) {
+      dailyState.guesses = saved.guessIds
         .map((id) => alllivers.find((t) => t.id === id))
         .filter(Boolean)
-        .map((t) => compareGuess(t, answerliver));
-      gameOver = saved.gameOver;
+        .map((t) => compareGuess(t, resolved));
+      dailyState.gameOver = saved.gameOver;
     }
+    applyState(dailyState);
   } else {
-     const savedUnlimited = loadUnlimitedProgress();
+    const savedUnlimited = loadUnlimitedProgress();
+    unlimitedState = { answer: null, guesses: [], gameOver: false };
     if (savedUnlimited) {
       const savedAnswer = alllivers.find((t) => t.id === savedUnlimited.answerId);
       if (savedAnswer) {
-        answerliver = savedAnswer;
-        guesses = savedUnlimited.guessIds
+        unlimitedState.answer = savedAnswer;
+        unlimitedState.guesses = savedUnlimited.guessIds
           .map((id) => alllivers.find((t) => t.id === id))
           .filter(Boolean)
-          .map((t) => compareGuess(t, answerliver));
-        gameOver = savedUnlimited.gameOver;
+          .map((t) => compareGuess(t, savedAnswer));
+        unlimitedState.gameOver = savedUnlimited.gameOver;
         // Restore the branch filter this round was started with, so a
         // page reload mid-round doesn't silently reopen guessing to
         // every branch again.
@@ -428,24 +434,30 @@ async function switchMode(mode, isInitialLoad = false) {
         // — start fresh rather than restoring a broken state.
         clearUnlimitedProgress();
         selectedBranches = await chooseBranches();
-        answerliver = resolveUnlimitedAnswer(getUnlimitedPool());
+        unlimitedState.answer = resolveUnlimitedAnswer(getUnlimitedPool());
       }
     } else {
       selectedBranches = await chooseBranches();
-      answerliver = resolveUnlimitedAnswer(getUnlimitedPool());
+      unlimitedState.answer = resolveUnlimitedAnswer(getUnlimitedPool());
     }
+    if (currentMode !== 'unlimited') return;
+    applyState(unlimitedState);
   }
-
-  stopCountdown();
-  renderBoard();
 
   if (!isInitialLoad) {
     setupAutocomplete();
   }
 
-  if (gameOver) {
-    showEndState();
-  }
+}
+
+function applyState(state) {
+  answerliver = state.answer;
+  guesses = state.guesses;
+  gameOver = state.gameOver;
+
+  stopCountdown();
+  renderBoard();
+  if (gameOver) showEndState();
 }
 
 // ----------------------------------------------------------------
@@ -453,11 +465,9 @@ async function switchMode(mode, isInitialLoad = false) {
 // ----------------------------------------------------------------
 async function newUnlimitedRound() {
   clearUnlimitedProgress();
-  guesses = [];
-  gameOver = false;
   selectedBranches = await chooseBranches();
-  answerliver = resolveUnlimitedAnswer(getUnlimitedPool());
-  renderBoard();
+  unlimitedState = { answer: resolveUnlimitedAnswer(getUnlimitedPool()), guesses: [], gameOver: false };
+  applyState(unlimitedState);
   setupAutocomplete();
 }
 
@@ -465,13 +475,14 @@ async function newUnlimitedRound() {
 function submitGuess(liver) {
   if (gameOver) return;
   if (guesses.some((g) => g.liver.id === liver.id)) return; // no duplicate guesses
-
+  
   const result = compareGuess(liver, answerliver);
   guesses.unshift(result); // newest guess on top, like a feed
 
 
   if (liver.id === answerliver.id) {
     gameOver = true;
+    (currentMode === 'daily' ? dailyState : unlimitedState).gameOver = true; 
     recordWin(guesses.length);
   }
 

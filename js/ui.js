@@ -61,7 +61,6 @@ function attachFlipEndHandlers(container) {
 
 function renderRow(guessResult, isNewest, animate) {
   const { liver } = guessResult;
-  console.log(guessResult);
   const rowClass = isNewest ? 'row row--newest' : 'row';
 
   const cells = COLUMNS.map((col, i) =>
@@ -124,7 +123,6 @@ function renderArrowCell(data, flipIndex) {
 }
 
 function renderLiverColorCell(data, flipIndex) {
-  console.log(data);
   const { classes, style } = flipAttrs(data.status, flipIndex);
   const swatch = data.color
     ? `<span class="swatch" style="background:${escapeAttr(data.color)}"></span>

@@ -25,83 +25,53 @@
 //   footerRight  string   — right side of the card footer
 // ------------------------------------------------------------------
 
-const UPDATES = [
-  // ---- Planned ----
-  {
-    title: 'Archive Mode',
-    description: 'Let players play past Niji-Dle',
-    type: 'feature',
-    status: 'planned',
-    footerLeft: 'Planned',
-    footerRight: 'Feature',
-  },
+// ------------------------------------------------------------------
+// Data — loaded from Supabase instead of hardcoded.
+// ------------------------------------------------------------------
+let UPDATES = [];
 
-  // ---- In progress ----
+let latestUpdateDate = null;
 
-  {
-    title: 'Clues after n tries',
-    description: '3 clues to be revealed after n tries, currently gathering data',
-    type: 'feature',
-    status: 'progress',
-    extraTag: 'Gameplay',
-    footerLeft: 'Gathering Data',
-    footerRight: 'Active',
-  },
+async function loadUpdates() {
+  const { data, error } = await db
+    .from('updates')
+    .select('*')
+    .order('sort_order', { ascending: true });
 
-  // ---- Testing ----
-  {
-    title: 'Branch selection for unlimited mode',
-    description: 'Building branch selection for unlimited mode',
-    type: 'feature',
-    status: 'testing',
-    extraTag: 'Gameplay',
-    footerLeft: 'In progress',
-    footerRight: 'Active',
-  },
+  if (error) {
+    console.error('Failed to load updates:', error);
+    return [];
+  }
 
-  // ---- Done ----
-  {
-    title: 'Unlimited Mode',
-    description: 'Players can play Niji-Dle as many times as they want',
-    type: 'feature',
-    status: 'done',
-    footerLeft: 'Shipped',
-    footerRight: 'Done',
-  },
-  {
-    title: 'Keyboard Support',
-    description: 'Players can use arrow keys to navigate dropdown options',
-    type: 'feature',
-    status: 'done',
-    footerLeft: 'Shipped',
-    footerRight: 'Done',
-  },
-  {
-    title: 'Color column rework',
-    description: 'Adjusted partial/match status of color column for better navigation of answer',
-    type: 'improvement',
-    status: 'done',
-    footerLeft: 'Shipped',
-    footerRight: 'Done',
-  },  
-    {
-    title: 'Tooltip for color column',
-    description: 'Added tooltip to show color family when hovered/clicked',
-    type: 'feature',
-    status: 'done',
-    footerLeft: 'Shipped',
-    footerRight: 'Done',
-  },  
-      {
-    title: '? in color column after update',
-    description: 'Due to code update and mismatch code version, colors in column are appearing as ?',
-    type: 'bug',
-    status: 'done',
-    footerLeft: 'Shipped',
-    footerRight: 'Done',
-  },
-];
+  if (data.length > 0) {
+    const mostRecent = data.reduce((latest, row) =>
+      new Date(row.created_at) > new Date(latest.created_at) ? row : latest
+    );
+    latestUpdateDate = mostRecent.created_at;
+  }
+  return data.map((row) => ({
+    title: row.title,
+    description: row.description,
+    type: row.type,
+    status: row.status,
+    priority: row.priority,
+    extraTag: row.extra_tag,
+    footerLeft: row.footer_left,
+    footerRight: row.footer_right,
+  }));
+}
 
+function renderLastUpdated() {
+  const el = document.getElementById('last-updated');
+  if (!el || !latestUpdateDate) return;
+  const formatted = new Date(latestUpdateDate).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
+  el.textContent = formatted;
+}
+  
 const LINKS = [
   {
     label: 'Feedback',
@@ -169,6 +139,14 @@ function buildCardHtml(update) {
       <p>${escapeHtml(update.description)}</p>
       <div class="card-footer"><span>${escapeHtml(update.footerLeft)}</span><span>${escapeHtml(update.footerRight)}</span></div>
     </article>`;
+}
+
+function showLoadingState() {
+  const containers = ['cards-planned', 'cards-progress', 'cards-testing', 'cards-done'];
+  containers.forEach((id) => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '<p class="board-loading">Loading updates&hellip;</p>';
+  });
 }
 
 function renderCards() {
@@ -301,8 +279,15 @@ function updateCount(cards) {
 
 let updateCardsRef = [];
 
-renderCards();
-renderLinks();
-updateCardsRef = [...document.querySelectorAll('.card')];
-setupFilters(updateCardsRef);
-applyVisibility(updateCardsRef);
+async function initUpdatesBoard() {
+  showLoadingState();
+  UPDATES = await loadUpdates();
+  renderCards();
+  renderLinks();
+  renderLastUpdated();
+  updateCardsRef = [...document.querySelectorAll('.card')];
+  setupFilters(updateCardsRef);
+  applyVisibility(updateCardsRef);
+}
+
+initUpdatesBoard();

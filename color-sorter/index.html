@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Color Family Sorter</title>
+    <link rel="stylesheet" href="/css/color-sorter.css">
+</head>
+
+<body>
+    <header>
+        <div class="top">
+            <div>
+                <h1>Color Family Sorter</h1>
+                <div class="sub">Drag a color into a family — or on mobile, tap a color then tap a family to sort it.
+                    Use Other for unusual/unclear colors.</div>
+            </div>
+            <div class="stats">
+                <span class="pill" id="progress">0 / 0 sorted</span>
+                <span class="pill" id="participantDisplay">Participant: —</span>
+                <span class="pill" id="submitStatus" style="display:none"></span>
+                <button id="submitBtn" class="primary">Submit</button>
+                <button id="exportBtn">Download CSV backup</button>
+                <button id="resetBtn">Reset</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="setup">
+            <div class="setup-grid">
+                <div>
+                    <label for="participant">Nickname</label>
+                    <input id="participant" type="text" placeholder="e.g. Haru">
+                    <div class="help">In case you'd like to update a row, etc... I have an identifier.</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="board">
+            <div class="column">
+                <div class="title">Unsorted <span class="count" id="unsortedCount">0</span></div>
+                <div id="unsorted" class="grid dropzone"></div>
+            </div>
+            <div class="categories" id="categories"></div>
+        </section>
+        <div class="footer">
+            <button id="reviewBtn">Review / Summary</button>
+        </div>
+    </main>
+
+    <div class="modal" id="modal">
+        <div class="dialog">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+                <h2 style="margin:0">Summary</h2>
+                <button id="closeModal">Close</button>
+            </div>
+            <p id="summaryText"></p>
+            <div id="summary"></div>
+        </div>
+    </div>
+    <script src="/js/color-sorter.js"></script>
+</body>
+
+</html>

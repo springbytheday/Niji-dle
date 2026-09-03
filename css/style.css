@@ -237,7 +237,15 @@ body {
 
 /* ---------------- Guess input ---------------- */
 
+.guess-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
 .guess-box {
+  flex: 1;
+  min-width: 0; /* keeps input from overflowing the flex row */
   position: relative;
 }
 
@@ -252,6 +260,8 @@ body {
   color: var(--text);
   outline: none;
   transition: border-color 0.15s ease;
+  height: 48px; /* pin the height explicitly */
+  box-sizing: border-box;
 }
 
 #guess-input:focus {
@@ -264,10 +274,7 @@ body {
 
 .suggestions {
   display: none;
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 0;
-  right: 0;
+  position: relative;
   background: var(--bg-raised);
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -882,6 +889,44 @@ body {
   display: none;
 }
 
+.give-up-button {
+  display: none; /* toggled by JS based on mode/game state */
+  align-items: center;
+  height: 48px; /* match input height, fixed */
+  white-space: nowrap;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  border-radius: 10px;
+  padding: 0 16px;
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+.give-up-button:hover {
+  border-color: var(--focus);
+  color: var(--text);
+}
+.overlay-cancel {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  padding: 10px;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.overlay-cancel:hover {
+  color: var(--text);
+}
 
 /* ---------------- Branch picker ---------------- */
  

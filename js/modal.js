@@ -373,6 +373,76 @@ function setupBranchPicker() {
   // Exposed for game.js's chooseBranches() to call.
   window.openBranchPicker = openBranchPickerImpl;
 }
+
+function setupGiveUpConfirm() {
+  const overlay = document.getElementById('giveup-overlay');
+  const dialog = document.getElementById('giveup-dialog');
+  const closeButton = document.getElementById('giveup-close');
+  const cancelButton = document.getElementById('giveup-cancel');
+  const confirmButton = document.getElementById('giveup-confirm');
+  const triggerButton = document.getElementById('give-up-button');
+
+  if (!overlay || !dialog || !triggerButton) return;
+
+  let lastFocusedElement = null;
+
+  function openConfirm() {
+    lastFocusedElement = document.activeElement;
+    overlay.classList.add('visible');
+    document.addEventListener('keydown', handleKeydown);
+    dialog.focus();
+  }
+
+  function closeConfirm() {
+    overlay.classList.remove('visible');
+    document.removeEventListener('keydown', handleKeydown);
+    if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+      lastFocusedElement.focus();
+    }
+  }
+
+  function handleKeydown(e) {
+    if (e.key === 'Escape') {
+      closeConfirm();
+      return;
+    }
+    if (e.key === 'Tab') {
+      trapFocus(e);
+    }
+  }
+
+  function trapFocus(e) {
+    const focusable = dialog.querySelectorAll('button');
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
+  triggerButton.addEventListener('click', openConfirm);
+  closeButton.addEventListener('click', closeConfirm);
+  if (cancelButton) cancelButton.addEventListener('click', closeConfirm);
+
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeConfirm();
+  });
+
+  confirmButton.addEventListener('click', () => {
+    closeConfirm();
+    if (typeof giveUpUnlimited === 'function') giveUpUnlimited();
+  });
+}
+
+
+
 setupInformation();
 setupTutorial();
 setupBranchPicker();
+setupGiveUpConfirm();

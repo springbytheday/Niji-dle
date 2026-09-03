@@ -224,7 +224,24 @@
 
       </div>
     </div>
+    <div id="giveup-overlay" class="overlay-overlay">
+      <div id="giveup-dialog" class="overlay-dialog" role="dialog" aria-modal="true" aria-labelledby="giveup-title"
+        tabindex="-1">
+        <button id="giveup-close" class="overlay-close" type="button" aria-label="Cancel">&times;</button>
 
+        <h2 id="giveup-title" class="overlay-title">Give up?</h2>
+        <p class="overlay-text">
+          This reveals the answer and counts as a played round in your stats.
+        </p>
+
+        <button id="giveup-confirm" class="overlay-start" type="button">
+          Yes, give up
+        </button>
+        <button id="giveup-cancel" class="overlay-cancel" type="button">
+          Keep playing
+        </button>
+      </div>
+    </div>
     <div id="branch-overlay" class="overlay-overlay">
       <div id="branch-dialog" class="overlay-dialog" role="dialog" aria-modal="true" aria-labelledby="branch-title"
         tabindex="-1">
@@ -258,11 +275,15 @@
 
       <p class="prompt">Guess the Nijisanji liver</p>
 
-      <div class="guess-box">
-        <input id="guess-input" type="text" autocomplete="off" placeholder="Type a liver name&hellip;"
-          aria-label="Guess a liver" />
-        <div id="suggestions" class="suggestions" role="listbox"></div>
+      <div class="guess-row">
+        <div class="guess-box">
+          <input id="guess-input" type="text" autocomplete="off" placeholder="Type a liver name&hellip;"
+            aria-label="Guess a liver" />
+          <div id="suggestions" class="suggestions" role="listbox"></div>
+        </div>
+        <button id="give-up-button" class="give-up-button" type="button">Give up</button>
       </div>
+
 
       <div id="end-banner" class="end-banner"></div>
 

@@ -455,6 +455,11 @@ function applyState(state) {
   guesses = state.guesses;
   gameOver = state.gameOver;
 
+  const giveUpBtn = document.getElementById('give-up-button');
+  if (giveUpBtn) {
+    giveUpBtn.style.display = (currentMode === 'unlimited' && !gameOver) ? 'inline-flex' : 'none';
+  }
+
   stopCountdown();
   renderBoard();
   if (gameOver) showEndState();
@@ -483,13 +488,14 @@ function submitGuess(liver) {
   if (liver.id === answerliver.id) {
     gameOver = true;
     (currentMode === 'daily' ? dailyState : unlimitedState).gameOver = true; 
-    recordWin(guesses.length);
+    recordResult(guesses.length);
   }
 
   saveProgress();
   renderBoard(true); // animate the flip reveal for this fresh guess only
 
   if (gameOver) {
+    document.getElementById('give-up-button')?.style.setProperty('display', 'none');
     showEndState();
   }
 }
@@ -512,7 +518,8 @@ const STATS_KEYS = {
 function defaultStats(mode) {
   const base = {
     totalGuessesOnWins: 0,
-    totalPlayed: 0
+    totalPlayed: 0,
+    totalWins: 0,
   };
   if (mode === 'daily') {
     // Daily needs date tracking for skip-a-day streak detection
@@ -541,36 +548,31 @@ function saveStats(mode, stats) {
   }
 }
  
-function recordWin(guessCount) {
-  const mode = currentMode;
+function recordResult(mode, { won, guessCount = 0 }) {
   const stats = loadStats(mode);
- 
+
   if (mode === 'daily') {
+    if (!won) return; // no give-up path in daily
+
     const today = todayKey();
     const yesterday = getPreviousDay(today);
- 
-    // Guard against double-counting if the page is reloaded after solving
-    if (stats.lastSolvedDate === today) return;
- 
+    if (stats.lastSolvedDate === today) return; // guard double-count on reload
+
     stats.totalPlayed += 1;
+    stats.totalWins += 1;
     stats.totalGuessesOnWins += guessCount;
- 
-    // Streak continues only if the last solved day was yesterday.
-    // Otherwise it's been skipped — reset to 1.
-    if (stats.lastSolvedDate === yesterday) {
-      stats.currentStreak += 1;
-    } else {
-      stats.currentStreak = 1;
-    }
- 
+
+    stats.currentStreak = stats.lastSolvedDate === yesterday ? stats.currentStreak + 1 : 1;
     stats.bestStreak = Math.max(stats.bestStreak, stats.currentStreak);
     stats.lastSolvedDate = today;
   } else {
-    // Unlimited: no loss condition, streak only ever grows
-    stats.totalPlayed += 1;
-    stats.totalGuessesOnWins += guessCount;
+    stats.totalPlayed += 1; // wins AND give-ups count as played
+    if (won) {
+      stats.totalWins += 1;
+      stats.totalGuessesOnWins += guessCount;
+    }
   }
- 
+
   saveStats(mode, stats);
 }
  
@@ -590,4 +592,15 @@ function getStats(mode) {
     ? (stats.totalGuessesOnWins / stats.totalPlayed).toFixed(1)
     : '—';
   return { ...stats, averageGuesses: avg };
+}
+
+function giveUpUnlimited() {
+  if (currentMode !== 'unlimited' || gameOver) return;
+
+  gameOver = true;
+  gaveUp = true;
+  recordResult('unlimited', { won: false });
+  saveProgress();
+  renderBoard();
+  showEndState(true);
 }

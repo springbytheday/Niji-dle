@@ -103,11 +103,16 @@ const families = ["Red", "Orange", "Yellow", "Green", "Teal", "Blue", "Purple", 
           return;
         }
         if (!selectedId || e.target.closest("input")) return;
-        const zone = e.target.closest(".dropzone");
-        if (!zone) return;
-        const parent = zone.closest(".category");
-        assignFamily(selectedId, parent ? parent.dataset.family : null);
-        setSelected(null);
+        const cat = e.target.closest(".category");
+        if (cat) {
+          assignFamily(selectedId, cat.dataset.family);
+          setSelected(null);
+          return;
+        }
+        if (e.target.closest(".column")) {
+          assignFamily(selectedId, null);
+          setSelected(null);
+        }
       });
     }
 

@@ -1,6 +1,4 @@
 function getAnnouncementKey(content) {
-  // Derive a stable short key from the content so each unique version
-  // of the announcement gets its own dismissed state in localStorage.
   let hash = 0;
   for (let i = 0; i < content.length; i++) {
     hash = (hash << 5) - hash + content.charCodeAt(i);
@@ -10,47 +8,49 @@ function getAnnouncementKey(content) {
 }
 
 function setupAnnouncement() {
-  const overlay  = document.getElementById('announcement-overlay');
-  const popup    = document.getElementById('announcement-popup');
-  const closeBtn = document.getElementById('announcement-close');
+  const overlay     = document.getElementById('announcement-overlay');
+  const popup       = document.getElementById('announcement-popup');
+  const closeBtn    = document.getElementById('announcement-close');
+  const reopenBtn   = document.getElementById('announcement-button');
 
   if (!overlay || !popup || !closeBtn) return;
 
-  // Explicitly disabled in HTML — keep hidden
-  if (popup.dataset.announcementDisabled === 'true') return;
-
-  // Key is derived from the popup's own HTML content, so any edit to
-  // the title/text/link in the HTML automatically resets dismissal.
   const key = getAnnouncementKey(popup.innerHTML);
 
-  // Already dismissed — don't show
-  try {
-    if (localStorage.getItem(key) === 'dismissed') return;
-  } catch (e) {}
+  function show() {
+    overlay.classList.add('visible');
+    document.addEventListener('keydown', onKeydown);
+  }
 
   function dismiss() {
     overlay.classList.remove('visible');
+    document.removeEventListener('keydown', onKeydown);
     try {
       localStorage.setItem(key, 'dismissed');
     } catch (e) {}
   }
 
-  overlay.classList.add('visible');
+  function onKeydown(e) {
+    if (e.key === 'Escape') dismiss();
+  }
 
   closeBtn.addEventListener('click', dismiss);
-
-  // Click outside the popup box also dismisses it
   overlay.addEventListener('click', (e) => {
     if (e.target === overlay) dismiss();
   });
 
-  // Escape key dismisses it
-  document.addEventListener('keydown', function onKeydown(e) {
-    if (e.key === 'Escape') {
-      dismiss();
-      document.removeEventListener('keydown', onKeydown);
-    }
-  });
+  if (reopenBtn) {
+    reopenBtn.addEventListener('click', show);
+  }
+
+  // Explicitly disabled in HTML, or already dismissed — don't auto-show,
+  // but the reopen button above still works regardless.
+  if (popup.dataset.announcementDisabled === 'true') return;
+  try {
+    if (localStorage.getItem(key) === 'dismissed') return;
+  } catch (e) {}
+
+  show();
 }
 
 setupAnnouncement();

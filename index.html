@@ -264,13 +264,52 @@
         </button>
       </div>
     </div>
+    <div id="allstats-overlay" class="overlay-overlay">
+      <div id="allstats-dialog" class="overlay-dialog" tabindex="-1" role="dialog" aria-modal="true"
+        aria-labelledby="allstats-title">
+        <button id="allstats-close" class="overlay-close" type="button" aria-label="Close">&times;</button>
+        <h2 id="allstats-title">All Unlimited Stats</h2>
+        <div id="allstats-body"></div>
+      </div>
+    </div>
+    <div id="settings-overlay" class="overlay-overlay">
+      <div id="settings-dialog" class="overlay-dialog" tabindex="-1" role="dialog" aria-modal="true"
+        aria-labelledby="settings-title">
+        <button id="settings-close" class="overlay-close" type="button" aria-label="Close">&times;</button>
+        <h2 id="settings-title" class="overlay-title">Settings</h2>
 
+        <div class="overlay-tabs">
+          <button class="overlay-tab overlay-tab--active" data-tab="branches">Branches</button>
+          <!-- Future: <button class="overlay-tab" data-tab="columns">Columns</button> -->
+        </div>
+
+        <div id="settings-tab-branches" class="overlay-panel">
+          <p class="settings-hint">Choose which branches Unlimited draws its answer from.</p>
+          <div id="settings-branch-list" class="branch-checkbox-list"></div>
+          <p id="settings-branch-error" class="branch-error" role="alert"></p>
+        </div>
+
+        <!-- Future:
+    <div id="settings-tab-columns" class="overlay-panel overlay-panel--hidden">
+      <p class="settings-hint">Coming soon: choose which columns appear on the board.</p>
+    </div>
+    -->
+
+        <button id="settings-apply" class="overlay-start" type="button">Apply</button>
+      </div>
+    </div>
     <main class="game">
-      <div class="mode-tabs" role="tablist">
-        <button id="mode-daily" class="mode-tab mode-tab--active" role="tab" aria-selected="true" type="button"
-          onclick="switchMode('daily')">Daily</button>
-        <button id="mode-unlimited" class="mode-tab" role="tab" aria-selected="false" type="button"
-          onclick="switchMode('unlimited')">Unlimited</button>
+      <div class="mode-row">
+        <div class="mode-tabs" role="tablist">
+          <button id="mode-daily" class="mode-tab mode-tab--active" role="tab" aria-selected="true" type="button"
+            onclick="switchMode('daily')">Daily</button>
+          <button id="mode-unlimited" class="mode-tab" role="tab" aria-selected="false" type="button"
+            onclick="switchMode('unlimited')">Unlimited</button>
+        </div>
+        <button id="settings-button" class="icon-button" type="button" aria-label="Unlimited mode settings"
+          aria-haspopup="dialog" style="display:none;">
+          <span aria-hidden="true">⚙️</span>
+        </button>
       </div>
 
       <p class="prompt">Guess the Nijisanji liver</p>

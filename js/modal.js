@@ -440,9 +440,218 @@ function setupGiveUpConfirm() {
   });
 }
 
+function setupAllStatsModal() {
+  const overlay = document.getElementById('allstats-overlay');
+  const dialog = document.getElementById('allstats-dialog');
+  const closeButton = document.getElementById('allstats-close');
+  const body = document.getElementById('allstats-body');
 
+  if (!overlay || !dialog || !body) return;
+
+  let lastFocusedElement = null;
+
+function buildTable() {
+  const rows = getAllUnlimitedStats();
+  if (rows.length === 0) {
+    return '<p class="allstats-empty">No unlimited rounds played yet.</p>';
+  }
+  const body = rows.map((r) => `
+    <tr>
+      <td>${escapeHtml(r.label)}</td>
+      <td>${r.totalPlayed}</td>
+      <td>${r.winRate}%</td>
+      <td>${escapeHtml(String(r.averageGuessesOnWins))}</td>
+      <td>${escapeHtml(String(r.averageGuessesAll))}</td>
+    </tr>`).join('');
+  return `
+    <table class="allstats-table">
+      <thead>
+        <tr><th>Branches</th><th>Played</th><th>Win %</th><th>Avg (Wins)</th><th>Avg (All)</th></tr>
+      </thead>
+      <tbody>${body}</tbody>
+    </table>`;
+}
+
+  function openModal() {
+    body.innerHTML = buildTable();
+    lastFocusedElement = document.activeElement;
+    overlay.classList.add('visible');
+    document.addEventListener('keydown', handleKeydown);
+    dialog.focus();
+  }
+
+  function closeModal() {
+    overlay.classList.remove('visible');
+    document.removeEventListener('keydown', handleKeydown);
+    if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+      lastFocusedElement.focus();
+    }
+  }
+
+  function handleKeydown(e) {
+    if (e.key === 'Escape') { closeModal(); return; }
+    if (e.key === 'Tab') { trapFocus(e); }
+  }
+
+  function trapFocus(e) {
+    const focusable = dialog.querySelectorAll('button');
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault(); last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault(); first.focus();
+    }
+  }
+
+  if (closeButton) closeButton.addEventListener('click', closeModal);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeModal();
+  });
+
+  // Exposed for ui.js's "View all stats" button to call.
+  window.openAllStatsModal = openModal;
+}
+
+function setupSettingsModal() {
+  const overlay = document.getElementById('settings-overlay');
+  const dialog = document.getElementById('settings-dialog');
+  const closeButton = document.getElementById('settings-close');
+  const applyButton = document.getElementById('settings-apply');
+  const list = document.getElementById('settings-branch-list');
+  const errorEl = document.getElementById('settings-branch-error');
+  const triggerButton = document.getElementById('settings-button');
+
+  if (!overlay || !dialog || !applyButton || !list) return;
+
+  let lastFocusedElement = null;
+
+  // ── Tab switching (same pattern as setupInformation) ──────────
+  // Only "branches" exists today; add more <button class="overlay-tab">
+  // + matching <div id="settings-tab-x"> panels in the HTML to extend,
+  // e.g. a future "columns" tab for a column selector — no other
+  // changes needed here.
+  const tabs = dialog.querySelectorAll('.overlay-tab');
+  const panels = dialog.querySelectorAll('.overlay-panel');
+
+  function switchTab(targetTabId) {
+    tabs.forEach((tab) => {
+      const isActive = tab.dataset.tab === targetTabId;
+      tab.classList.toggle('overlay-tab--active', isActive);
+      tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+    });
+    panels.forEach((panel) => {
+      panel.classList.toggle('overlay-panel--hidden', panel.id !== 'settings-tab-' + targetTabId);
+    });
+  }
+
+  tabs.forEach((tab) => {
+    tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+  });
+
+  // ── Branches panel ─────────────────────────────────────────────
+  function branchCheckboxId(branch) {
+    return 'settings-branch-cb-' + branch.replace(/\s+/g, '-').toLowerCase();
+  }
+
+  function renderBranchCheckboxes() {
+    const branches = getAllBranches();
+    const saved = loadSavedBranches();
+    list.innerHTML = '';
+
+    branches.forEach((branch) => {
+      const id = branchCheckboxId(branch);
+      const isChecked = saved ? saved.includes(branch) : true;
+
+      const label = document.createElement('label');
+      label.className = 'branch-checkbox-item';
+      label.htmlFor = id;
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.id = id;
+      checkbox.value = branch;
+      checkbox.checked = isChecked;
+
+      const span = document.createElement('span');
+      span.textContent = branch;
+
+      label.appendChild(checkbox);
+      label.appendChild(span);
+      list.appendChild(label);
+    });
+  }
+
+  function getCheckedBranches() {
+    return Array.from(list.querySelectorAll('input[type="checkbox"]:checked')).map((cb) => cb.value);
+  }
+
+  // ── Open / close ────────────────────────────────────────────────
+  function openSettings() {
+    if (errorEl) errorEl.textContent = '';
+    switchTab('branches');
+    renderBranchCheckboxes();
+    lastFocusedElement = document.activeElement;
+    overlay.classList.add('visible');
+    document.addEventListener('keydown', handleKeydown);
+    dialog.focus();
+  }
+
+  function closeSettings() {
+    overlay.classList.remove('visible');
+    document.removeEventListener('keydown', handleKeydown);
+    if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+      lastFocusedElement.focus();
+    }
+  }
+
+  function applySettings() {
+    const checkedBranches = getCheckedBranches();
+    if (checkedBranches.length === 0) {
+      if (errorEl) errorEl.textContent = 'Pick at least one branch to continue.';
+      return;
+    }
+    closeSettings();
+    // game.js listens for this to reset the unlimited round with the
+    // new branch selection. Future panels (e.g. columns) can extend
+    // this payload rather than needing a second callback.
+    if (typeof window.onSettingsApplied === 'function') {
+      window.onSettingsApplied({ branches: checkedBranches });
+    }
+  }
+
+  function handleKeydown(e) {
+    if (e.key === 'Escape') { closeSettings(); return; }
+    if (e.key === 'Tab') { trapFocus(e); }
+  }
+
+  function trapFocus(e) {
+    const focusable = dialog.querySelectorAll('button, input[type="checkbox"]');
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault(); last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault(); first.focus();
+    }
+  }
+
+  applyButton.addEventListener('click', applySettings);
+  if (closeButton) closeButton.addEventListener('click', closeSettings);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closeSettings();
+  });
+  if (triggerButton) triggerButton.addEventListener('click', openSettings);
+
+  // Exposed in case something else needs to trigger it programmatically.
+  window.openSettingsModal = openSettings;
+}
 
 setupInformation();
 setupTutorial();
 setupBranchPicker();
 setupGiveUpConfirm();
+setupAllStatsModal();
+setupSettingsModal();

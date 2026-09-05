@@ -253,70 +253,85 @@ function showEndState() {
 
   if (!banner) return;
 
-const stats = getStats(currentMode);
+  const stats = getStats(currentMode, getBranchSignature(selectedBranches));
 
-  if (currentMode === 'daily') {
-    banner.innerHTML = `
-      <div class="end-card">
-        <p class="end-title">It was ${escapeHtml(answerliver.name)}!</p>
-        <p class="end-sub">Next liver in: <span id="countdown-display" class="countdown-display">00:00:00</span></p>
-        <button id="share-button" class="share-button" type="button">Share results</button>
-      </div>
-      ${renderStatsBlock(stats, 'daily')}`;;
-    banner.classList.add('visible');
- 
-    const shareButton = document.getElementById('share-button');
-    if (shareButton) {
-      shareButton.addEventListener('click', () => copyShareText(shareButton));
-    }
-    
-    startCountdown();
-  }
-  else {
-    // Unlimited mode — no countdown or share, just a play-again button
-    banner.innerHTML = `
-      <div class="end-card">
-        <p class="end-title">It was ${escapeHtml(answerliver.name)}!</p>
-        <p class="end-sub">Want to go again?</p>
-        <button id="play-again-button" class="share-button" type="button">Play again</button>
-      </div>
-      ${renderStatsBlock(stats, 'unlimited')}`;
-    banner.classList.add('visible');
+if (currentMode === 'daily') {
+  banner.innerHTML = `
+    <div class="end-card">
+      <p class="end-title">It was ${escapeHtml(answerliver.name)}!</p>
+      <p class="end-sub">Next liver in: <span id="countdown-display" class="countdown-display">00:00:00</span></p>
+      <button id="share-button" class="share-button" type="button">Share results</button>
+    </div>
+    ${renderStatsBlock(stats, 'daily')}`;
+  banner.classList.add('visible');
 
-    const playAgainButton = document.getElementById('play-again-button');
-    if (playAgainButton) {
-      playAgainButton.addEventListener('click', () => {
-        banner.classList.remove('visible');
-        banner.innerHTML = '';
-        input.disabled = false;
-        input.placeholder = "Type a liver name...";
-        newUnlimitedRound();
-      });
-    }
+  const shareButton = document.getElementById('share-button');
+  if (shareButton) {
+    shareButton.addEventListener('click', () => copyShareText(shareButton));
   }
+
+  startCountdown();
+}
+else {
+  banner.innerHTML = `
+    <div class="end-card">
+      <p class="end-title">It was ${escapeHtml(answerliver.name)}!</p>
+      <p class="end-sub">Want to go again?</p>
+      <button id="play-again-button" class="share-button" type="button">Play again</button>
+    </div>
+    ${renderStatsBlock(stats, 'unlimited', getBranchSignature(selectedBranches))}`;
+  banner.classList.add('visible');
+
+  const playAgainButton = document.getElementById('play-again-button');
+  if (playAgainButton) {
+    playAgainButton.addEventListener('click', () => {
+      banner.classList.remove('visible');
+      banner.innerHTML = '';
+      input.disabled = false;
+      input.placeholder = "Type a liver name...";
+      newUnlimitedRound();
+    });
+  }
+
+  const viewStatsButton = document.getElementById('view-all-stats-button');
+  if (viewStatsButton) {
+    viewStatsButton.addEventListener('click', () => {
+      if (typeof openAllStatsModal === 'function') openAllStatsModal();
+    });
+  }
+}
 }
 
 
 // Builds the stats block HTML for both modes.
 // Returns an HTML string injected inline below the end-card.
-function renderStatsBlock(stats, mode) {
-  const avg = stats.averageGuesses;
-  const rows = [
-  { label: 'Played', value: stats.totalPlayed },
-    { label: 'Avg Guesses', value: avg },
-  ];
+function renderStatsBlock(stats, mode, branchSignature) {
+  const rows = [{ label: 'Played', value: stats.totalPlayed }];
+
   if (mode === 'daily') {
+    rows.push({ label: 'Avg Guesses', value: stats.averageGuessesOnWins });
     rows.push({ label: 'Current Streak', value: stats.currentStreak });
     rows.push({ label: 'Best Streak', value: stats.bestStreak });
+  } else {
+    rows.push({ label: 'Avg Guesses (Wins)', value: stats.averageGuessesOnWins });
+    rows.push({ label: 'Avg Guesses (All)', value: stats.averageGuessesAll });
   }
- 
+
   const cells = rows.map((r) => `
     <div class="stats-cell">
       <span class="stats-value">${escapeHtml(String(r.value))}</span>
       <span class="stats-label">${escapeHtml(r.label)}</span>
     </div>`).join('');
- 
-  return `<div class="stats-block">${cells}</div>`;
+
+  const scopeLabel = mode === 'unlimited'
+    ? `<p class="stats-scope">Stats for ${escapeHtml(getBranchLabel(branchSignature))}</p>`
+    : '';
+
+  const viewAllButton = mode === 'unlimited'
+    ? `<button id="view-all-stats-button" class="stats-view-all" type="button">View all stats</button>`
+    : '';
+
+  return `<div class="stats-block-wrap">${scopeLabel}<div class="stats-block">${cells}</div>${viewAllButton}</div>`;
 }
 
 // ----------------------------------------------------------------
@@ -500,8 +515,8 @@ function renderSuggestionList(matches, input, list) {
     });
     list.appendChild(item);
   });
-  console.log(list);
   list.classList.add('visible');
+  list.scrollTop = 0;
 }
 
 // ----------------------------------------------------------------

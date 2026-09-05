@@ -235,6 +235,22 @@ body {
   color: #fff;
 }
 
+/* ---------------- Mode row (tabs + unlimited settings) ---------------- */
+
+.mode-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.settings-hint {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-dim);
+  margin: 0 0 12px;
+}
+
 /* ---------------- Guess input ---------------- */
 
 .guess-row {
@@ -661,7 +677,33 @@ body {
   color: var(--text-dim);
   text-align: center;
 }
- 
+
+.stats-scope {
+  font-size: 0.85em;
+  color: var(--text-dim);
+  margin-bottom: 6px;
+}
+.stats-view-all {
+  margin-top: 8px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 0.85em;
+}
+.allstats-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.allstats-table th, .allstats-table td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+}
+.allstats-empty {
+  color: var(--text-dim);
+} 
 
 /* ---------------- Site footer ---------------- */
 

@@ -3,6 +3,8 @@
 const STORAGE_KEY_PREFIX = 'nijidle_progress_';
 const UNLIMITED_STORAGE_KEY = 'nijidle_unlimited';
 
+const LAUNCH_DATE = '2026-06-27';
+
 const DAILY_BRANCHES = ['en', 'jp', 'ex-kr', 'ex-id'];
 
 let alllivers = [];
@@ -14,12 +16,20 @@ let currentMode = 'daily';
 let dailyState = { answer: null, guesses: [], gameOver: false };
 let unlimitedState = { answer: null, guesses: [], gameOver: false };
 
-// ----------------------------------------------------------------
-// Unlimited mode — branch filtering
-// ----------------------------------------------------------------
 const BRANCH_STORAGE_KEY = 'nijidle_branches';
 let selectedBranches = [];
 
+// Human-readable branch names for labeling stats.
+const BRANCH_DISPLAY_NAMES = {
+  en: 'EN',
+  jp: 'JP',
+  'ex-kr': 'ex-KR',
+  'ex-id': 'ex-ID',
+};
+
+// ----------------------------------------------------------------
+// Unlimited mode — branch filtering
+// ----------------------------------------------------------------
 // Returns the sorted list of distinct branch values present in the pool.
 function getAllBranches() {
   return [...new Set(alllivers.map((t) => t.branch).filter(Boolean))].sort();
@@ -83,7 +93,7 @@ function todayKey() {
 // ----------------------------------------------------------------
 // Puzzle numbering for shared results, counting days since launch 
 // ----------------------------------------------------------------
-const LAUNCH_DATE = '2026-06-27';
+
  
 function getPuzzleNumber(dateKey) {
   const launch = new Date(LAUNCH_DATE + 'T00:00:00');
@@ -416,6 +426,9 @@ async function switchMode(mode, isInitialLoad = false) {
   } else {
     const savedUnlimited = loadUnlimitedProgress();
     unlimitedState = { answer: null, guesses: [], gameOver: false };
+    guesses = [];
+    gameOver = false;
+    renderBoard();
     if (savedUnlimited) {
       const savedAnswer = alllivers.find((t) => t.id === savedUnlimited.answerId);
       if (savedAnswer) {
@@ -459,7 +472,10 @@ function applyState(state) {
   if (giveUpBtn) {
     giveUpBtn.style.display = (currentMode === 'unlimited' && !gameOver) ? 'inline-flex' : 'none';
   }
-
+  const changeBranchesBtn = document.getElementById('settings-button');
+  if (changeBranchesBtn) {
+    changeBranchesBtn.style.display = (currentMode === 'unlimited' && !gameOver) ? 'inline-flex' : 'none';
+  }
   stopCountdown();
   renderBoard();
   if (gameOver) showEndState();
@@ -470,12 +486,30 @@ function applyState(state) {
 // ----------------------------------------------------------------
 async function newUnlimitedRound() {
   clearUnlimitedProgress();
-  selectedBranches = await chooseBranches();
+  guesses = [];
+  gameOver = false;
+  renderBoard();
+  if (!selectedBranches || selectedBranches.length === 0) {
+    selectedBranches = loadSavedBranches() || await chooseBranches();
+  }
   unlimitedState = { answer: resolveUnlimitedAnswer(getUnlimitedPool()), guesses: [], gameOver: false };
   applyState(unlimitedState);
   setupAutocomplete();
 }
 
+// Called by modal.js's Settings modal when the player applies a new
+// branch selection. Starts a fresh unlimited round under the new
+// filter. If a future "Columns" tab is added to Settings, extend the
+// payload object rather than adding a second global callback.
+window.onSettingsApplied = function ({ branches }) {
+  if (currentMode !== 'unlimited') return;
+  selectedBranches = branches;
+  saveBranches(branches);
+  clearUnlimitedProgress();
+  unlimitedState = { answer: resolveUnlimitedAnswer(getUnlimitedPool()), guesses: [], gameOver: false };
+  applyState(unlimitedState);
+  setupAutocomplete();
+};
 
 function submitGuess(liver) {
   if (gameOver) return;
@@ -488,7 +522,7 @@ function submitGuess(liver) {
   if (liver.id === answerliver.id) {
     gameOver = true;
     (currentMode === 'daily' ? dailyState : unlimitedState).gameOver = true; 
-    recordResult(guesses.length);
+    recordResult(currentMode, { won: true, guessCount: guesses.length }, getBranchSignature(selectedBranches));
   }
 
   saveProgress();
@@ -507,7 +541,7 @@ function showError(message) {
   }
 }
 // ----------------------------------------------------------------
-// Unlimited Mode - Stats
+// Stats
 // ----------------------------------------------------------------
 
 const STATS_KEYS = {
@@ -518,38 +552,78 @@ const STATS_KEYS = {
 function defaultStats(mode) {
   const base = {
     totalGuessesOnWins: 0,
+    totalGuessesAll: 0,
     totalPlayed: 0,
     totalWins: 0,
   };
   if (mode === 'daily') {
-    // Daily needs date tracking for skip-a-day streak detection
     base.currentStreak = 0;
     base.bestStreak = 0;
-    base.lastSolvedDate = null; // 'YYYY-MM-DD' of the most recent solved day
+    base.lastSolvedDate = null;
   }
   return base;
 }
 
-function loadStats(mode) {
-  try {
-    const raw = localStorage.getItem(STATS_KEYS[mode]);
-    if (!raw) return defaultStats(mode);
-    return { ...defaultStats(mode), ...JSON.parse(raw) };
-  } catch (e) {
-    return defaultStats(mode);
-  }
+// Order-independent key for a branch selection, e.g. ['jp','en'] -> 'en,jp'
+function getBranchSignature(branches) {
+  return [...branches].sort().join(',');
 }
- 
-function saveStats(mode, stats) {
+
+function loadUnlimitedStatsMap() {
+  let map;
   try {
-    localStorage.setItem(STATS_KEYS[mode], JSON.stringify(stats));
+    const raw = localStorage.getItem(STATS_KEYS.unlimited);
+    map = raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    map = {};
+  }
+  if (map && typeof map === 'object' && 'totalPlayed' in map) {
+    const legacy = map;
+    const allSig = getBranchSignature(getAllBranches());
+    map = { [allSig]: legacy };
+    saveUnlimitedStatsMap(map);
+  }
+  return map || {};
+}
+
+function saveUnlimitedStatsMap(map) {
+  try {
+    localStorage.setItem(STATS_KEYS.unlimited, JSON.stringify(map));
   } catch (e) {
     console.warn('Could not save stats:', e);
   }
 }
+
+function loadStats(mode, branchSignature) {
+  if (mode === 'daily') {
+    try {
+      const raw = localStorage.getItem(STATS_KEYS.daily);
+      if (!raw) return defaultStats('daily');
+      return { ...defaultStats('daily'), ...JSON.parse(raw) };
+    } catch (e) {
+      return defaultStats('daily');
+    }
+  }
+  const map = loadUnlimitedStatsMap();
+  return { ...defaultStats('unlimited'), ...(map[branchSignature] || {}) };
+}
  
-function recordResult(mode, { won, guessCount = 0 }) {
-  const stats = loadStats(mode);
+function saveStats(mode, stats, branchSignature) {
+  if (mode === 'daily') {
+    try {
+      localStorage.setItem(STATS_KEYS.daily, JSON.stringify(stats));
+    } catch (e) {
+      console.warn('Could not save stats:', e);
+    }
+    return;
+  }
+  const map = loadUnlimitedStatsMap();
+  map[branchSignature] = stats;
+  saveUnlimitedStatsMap(map);
+}
+ 
+function recordResult(mode, { won, guessCount = 0 }, branchSignature) {
+  const stats = loadStats(mode, branchSignature);
 
   if (mode === 'daily') {
     if (!won) return; // no give-up path in daily
@@ -561,19 +635,21 @@ function recordResult(mode, { won, guessCount = 0 }) {
     stats.totalPlayed += 1;
     stats.totalWins += 1;
     stats.totalGuessesOnWins += guessCount;
+    stats.totalGuessesAll += guessCount;
 
     stats.currentStreak = stats.lastSolvedDate === yesterday ? stats.currentStreak + 1 : 1;
     stats.bestStreak = Math.max(stats.bestStreak, stats.currentStreak);
     stats.lastSolvedDate = today;
   } else {
     stats.totalPlayed += 1; // wins AND give-ups count as played
+    stats.totalGuessesAll += guessCount;
     if (won) {
       stats.totalWins += 1;
       stats.totalGuessesOnWins += guessCount;
     }
   }
 
-  saveStats(mode, stats);
+  saveStats(mode, stats, branchSignature);
 }
  
 // Returns 'YYYY-MM-DD' for the calendar day before the given dateKey
@@ -586,12 +662,15 @@ function getPreviousDay(dateKey) {
   return `${y}-${m}-${day}`;
 }
  
-function getStats(mode) {
-  const stats = loadStats(mode);
-  const avg = stats.totalPlayed > 0
-    ? (stats.totalGuessesOnWins / stats.totalPlayed).toFixed(1)
+function getStats(mode, branchSignature) {
+  const stats = loadStats(mode, branchSignature);
+  const averageGuessesOnWins = stats.totalWins > 0
+    ? (stats.totalGuessesOnWins / stats.totalWins).toFixed(1)
     : '—';
-  return { ...stats, averageGuesses: avg };
+  const averageGuessesAll = stats.totalPlayed > 0
+    ? (stats.totalGuessesAll / stats.totalPlayed).toFixed(1)
+    : '—';
+  return { ...stats, averageGuessesOnWins, averageGuessesAll };
 }
 
 function giveUpUnlimited() {
@@ -599,8 +678,52 @@ function giveUpUnlimited() {
 
   gameOver = true;
   gaveUp = true;
-  recordResult('unlimited', { won: false });
+  recordResult('unlimited', { won: false, guessCount: guesses.length }, getBranchSignature(selectedBranches));
   saveProgress();
   renderBoard();
   showEndState(true);
+}
+
+function formatBranchName(branch) {
+  return BRANCH_DISPLAY_NAMES[branch] || branch;
+}
+
+// Turns a branch signature back into a display label, e.g.
+// "en,jp" -> "EN, JP". If the signature matches every known branch,
+// show "All branches" instead of spelling all of them out.
+function getBranchLabel(signature) {
+  if (!signature) return 'All branches';
+  const branches = signature.split(',').filter(Boolean);
+  const allSig = getBranchSignature(getAllBranches());
+  if (signature === allSig) return 'All branches';
+  return branches.map(formatBranchName).join(', ');
+}
+
+// Every branch-combo the player has ever recorded unlimited stats
+// under, with derived win rate, sorted by most-played first.
+function getAllUnlimitedStats() {
+  const map = loadUnlimitedStatsMap();
+  return Object.keys(map)
+    .map((sig) => {
+      const stats = { ...defaultStats('unlimited'), ...map[sig] };
+      const averageGuessesOnWins = stats.totalWins > 0
+        ? (stats.totalGuessesOnWins / stats.totalWins).toFixed(1)
+        : '—';
+      const averageGuessesAll = stats.totalPlayed > 0
+        ? (stats.totalGuessesAll / stats.totalPlayed).toFixed(1)
+        : '—';
+      const winRate = stats.totalPlayed > 0
+        ? Math.round((stats.totalWins / stats.totalPlayed) * 100)
+        : 0;
+      return {
+        signature: sig,
+        label: getBranchLabel(sig),
+        totalPlayed: stats.totalPlayed,
+        totalWins: stats.totalWins,
+        winRate,
+        averageGuessesOnWins,
+        averageGuessesAll,
+      };
+    })
+    .sort((a, b) => b.totalPlayed - a.totalPlayed);
 }

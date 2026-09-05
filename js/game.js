@@ -456,11 +456,6 @@ async function switchMode(mode, isInitialLoad = false) {
     if (currentMode !== 'unlimited') return;
     applyState(unlimitedState);
   }
-
-  if (!isInitialLoad) {
-    setupAutocomplete();
-  }
-
 }
 
 function applyState(state) {
@@ -494,7 +489,6 @@ async function newUnlimitedRound() {
   }
   unlimitedState = { answer: resolveUnlimitedAnswer(getUnlimitedPool()), guesses: [], gameOver: false };
   applyState(unlimitedState);
-  setupAutocomplete();
 }
 
 // Called by modal.js's Settings modal when the player applies a new
@@ -508,7 +502,6 @@ window.onSettingsApplied = function ({ branches }) {
   clearUnlimitedProgress();
   unlimitedState = { answer: resolveUnlimitedAnswer(getUnlimitedPool()), guesses: [], gameOver: false };
   applyState(unlimitedState);
-  setupAutocomplete();
 };
 
 function submitGuess(liver) {

@@ -379,8 +379,6 @@ function updateModeToggle(mode) {
 function setupAutocomplete() {
   const input = document.getElementById('guess-input');
   const list = document.getElementById('suggestions');
-  console.log(input);
-  console.log(list);
   if (!input || !list) return;
 
   let highlightedIndex = -1; //nothing is highlighted
@@ -488,7 +486,6 @@ function renderSuggestionList(matches, input, list) {
     list.classList.remove('visible');
     return;
   }
-  console.log(matches);
   matches.forEach((t) => {
     const item = document.createElement('button');
     item.type = 'button';

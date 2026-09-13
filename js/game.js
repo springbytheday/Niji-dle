@@ -545,7 +545,7 @@ const STATS_KEYS = {
 function defaultStats(mode) {
   const base = {
     totalGuessesOnWins: 0,
-    totalGuessesAll: 0,
+    totalGuessesAll: null,
     totalPlayed: 0,
     totalWins: 0,
   };
@@ -660,7 +660,7 @@ function getStats(mode, branchSignature) {
   const averageGuessesOnWins = stats.totalWins > 0
     ? (stats.totalGuessesOnWins / stats.totalWins).toFixed(1)
     : '—';
-  const averageGuessesAll = stats.totalPlayed > 0
+  const averageGuessesAll = (stats.totalGuessesAll != null && stats.totalPlayed > 0)
     ? (stats.totalGuessesAll / stats.totalPlayed).toFixed(1)
     : '—';
   return { ...stats, averageGuessesOnWins, averageGuessesAll };
@@ -702,7 +702,7 @@ function getAllUnlimitedStats() {
       const averageGuessesOnWins = stats.totalWins > 0
         ? (stats.totalGuessesOnWins / stats.totalWins).toFixed(1)
         : '—';
-      const averageGuessesAll = stats.totalPlayed > 0
+      const averageGuessesAll = (stats.totalGuessesAll != null && stats.totalPlayed > 0)
         ? (stats.totalGuessesAll / stats.totalPlayed).toFixed(1)
         : '—';
       const winRate = stats.totalPlayed > 0

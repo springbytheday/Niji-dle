@@ -191,10 +191,21 @@ button.filter.active {
   border-radius: 50%;
 }
 
-.planned .dot { background: var(--focus); }
-.progress .dot { background: var(--partial); }
-.testing .dot { background: var(--unknown); }
-.done .dot { background: var(--hit); }
+.planned .dot {
+  background: var(--focus);
+}
+.progress .dot {
+  background: var(--partial);
+}
+.testing .dot {
+  background: var(--unknown);
+}
+.done .dot {
+  background: var(--hit);
+}
+.resolved .dot {
+  background: var(--hit);
+}
 
 .count {
   min-width: 24px;
@@ -226,7 +237,7 @@ button.show-more {
   font-size: 0.78rem;
   cursor: pointer;
 }
- 
+
 button.show-more:hover {
   color: var(--text);
   border-color: var(--focus);
@@ -237,7 +248,9 @@ button.show-more:hover {
   border: 1px solid var(--border);
   border-radius: 11px;
   padding: 14px;
-  transition: transform 0.15s ease, border-color 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .card:hover {
@@ -328,7 +341,7 @@ button.show-more:hover {
 }
 
 .event::before {
-  content: '';
+  content: "";
   position: absolute;
   width: 9px;
   height: 9px;
@@ -362,7 +375,7 @@ button.show-more:hover {
   grid-template-columns: repeat(3, 1fr);
   gap: 14px;
 }
- 
+
 .link-card {
   display: block;
   background: var(--bg-raised);
@@ -370,14 +383,16 @@ button.show-more:hover {
   border-radius: 14px;
   padding: 20px;
   text-decoration: none;
-  transition: transform 0.15s ease, border-color 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease;
 }
- 
+
 .link-card:hover {
   transform: translateY(-2px);
   border-color: var(--focus);
 }
- 
+
 .link-card .link-kicker {
   color: var(--focus);
   font-family: var(--font-mono);
@@ -386,14 +401,14 @@ button.show-more:hover {
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
- 
+
 .link-card h3 {
   margin: 8px 0 6px;
   font-family: var(--font-display);
   font-size: 1rem;
   color: var(--text);
 }
- 
+
 .link-card p {
   margin: 0;
   color: var(--text-dim);
@@ -408,18 +423,36 @@ button.show-more:hover {
 }
 
 @media (max-width: 900px) {
-  .board { grid-template-columns: repeat(4, minmax(260px, 1fr)); }
-  .stats { grid-template-columns: repeat(2, 1fr); }
-  .link-grid { grid-template-columns: 1fr; }
+  .board {
+    grid-template-columns: repeat(4, minmax(260px, 1fr));
+  }
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .link-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 560px) {
-  .wrap { width: min(100% - 24px, 1400px); }
-  .updates-body header { padding-top: 28px; }
-  .updates-topbar { margin-bottom: 30px; }
-  .stats { gap: 8px; }
-  .stat { padding: 14px; }
-  .updates-body h1 { font-size: 2.65rem; }
+  .wrap {
+    width: min(100% - 24px, 1400px);
+  }
+  .updates-body header {
+    padding-top: 28px;
+  }
+  .updates-topbar {
+    margin-bottom: 30px;
+  }
+  .stats {
+    gap: 8px;
+  }
+  .stat {
+    padding: 14px;
+  }
+  .updates-body h1 {
+    font-size: 2.65rem;
+  }
 }
 
 /* ==================================================================
@@ -513,13 +546,34 @@ button.show-more:hover {
   margin-bottom: 12px;
 }
 
-.status-pill--received { background: var(--unknown); color: #fff; }
-.status-pill--planned { background: var(--focus); color: #fff; }
-.status-pill--in_progress { background: var(--partial); color: #1a1300; }
-.status-pill--testing { background: var(--another_partial); color: #1a1300; }
-.status-pill--done { background: var(--hit); color: #fff; }
-.status-pill--resolved { background: var(--hit); color: #fff; }
-.status-pill--wontfix { background: var(--miss); color: var(--text); }
+.status-pill--received {
+  background: var(--unknown);
+  color: #fff;
+}
+.status-pill--planned {
+  background: var(--focus);
+  color: #fff;
+}
+.status-pill--in_progress {
+  background: var(--partial);
+  color: #1a1300;
+}
+.status-pill--testing {
+  background: var(--another_partial);
+  color: #1a1300;
+}
+.status-pill--done {
+  background: var(--hit);
+  color: #fff;
+}
+.status-pill--resolved {
+  background: var(--hit);
+  color: #fff;
+}
+.status-pill--wontfix {
+  background: var(--miss);
+  color: var(--text);
+}
 
 .status-response {
   font-size: 0.88rem;

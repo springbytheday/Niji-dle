@@ -400,6 +400,11 @@ function updateModeToggle(mode) {
         ? "Guess today\u2019s Nijisanji liver"
         : "Guess any Nijisanji liver";
   }
+  const puzzleNumberEl = document.getElementById("puzzle-number");
+  if (puzzleNumberEl) {
+    puzzleNumberEl.textContent =
+      mode === "daily" ? `#${getPuzzleNumber(todayKey())}` : "";
+  }
 
   // Clear the end-banner and stop the countdown when switching modes,
   // so a won daily board doesn't leave a frozen end-card when you

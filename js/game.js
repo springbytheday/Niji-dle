@@ -3,11 +3,81 @@
 const STORAGE_KEY_PREFIX = 'nijidle_progress_';
 const UNLIMITED_STORAGE_KEY = 'nijidle_unlimited';
 
+const LAUNCH_DATE = '2026-06-27';
+
+const DAILY_BRANCHES = ['en', 'jp', 'ex-kr', 'ex-id'];
+
 let alllivers = [];
 let answerliver = null;
 let guesses = [];
 let gameOver = false;
 let currentMode = 'daily'; 
+
+let dailyState = { answer: null, guesses: [], gameOver: false };
+let unlimitedState = { answer: null, guesses: [], gameOver: false };
+
+const BRANCH_STORAGE_KEY = 'nijidle_branches';
+let selectedBranches = [];
+
+// Human-readable branch names for labeling stats.
+const BRANCH_DISPLAY_NAMES = {
+  en: 'EN',
+  jp: 'JP',
+  'ex-kr': 'ex-KR',
+  'ex-id': 'ex-ID',
+};
+
+// ----------------------------------------------------------------
+// Unlimited mode — branch filtering
+// ----------------------------------------------------------------
+// Returns the sorted list of distinct branch values present in the pool.
+function getAllBranches() {
+  return [...new Set(alllivers.map((t) => t.branch).filter(Boolean))].sort();
+}
+
+function loadSavedBranches() {
+  try {
+    const raw = localStorage.getItem(BRANCH_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+function saveBranches(branches) {
+  try {
+    localStorage.setItem(BRANCH_STORAGE_KEY, JSON.stringify(branches));
+  } catch (e) {
+    // Non-critical
+  }
+}
+
+// Livers eligible to be the Unlimited answer, given the current branch
+// selection. Falls back to the full roster if the filter would otherwise
+// leave nothing to pick from.
+function getUnlimitedPool() {
+  const pool = alllivers.filter((t) => selectedBranches.includes(t.branch));
+  return pool.length > 0 ? pool : alllivers;
+}
+
+// Opens the branch picker modal (see modal.js) and resolves once the
+// player confirms a selection, saving it for next time.
+function chooseBranches() {
+  return new Promise((resolve) => {
+    if (typeof openBranchPicker !== 'function') {
+      // Picker isn't available for some reason — fall back to everything.
+      resolve(getAllBranches());
+      return;
+    }
+    openBranchPicker((branches) => {
+      selectedBranches = branches;
+      saveBranches(branches);
+      resolve(branches);
+    });
+  });
+}
 
 // ----------------------------------------------------------------
 // Date handling — the daily puzzle resets at local midnight.
@@ -23,7 +93,7 @@ function todayKey() {
 // ----------------------------------------------------------------
 // Puzzle numbering for shared results, counting days since launch 
 // ----------------------------------------------------------------
-const LAUNCH_DATE = '2026-06-27';
+
  
 function getPuzzleNumber(dateKey) {
   const launch = new Date(LAUNCH_DATE + 'T00:00:00');
@@ -44,6 +114,19 @@ async function loadlivers() {
     return [];
   }
   return data;
+}
+
+// Livers that can be typed/selected as a guess in the current mode.
+// Daily is scoped to the same branches the puzzle answer can come from
+// (see get_or_create_daily_puzzle); Unlimited is scoped to whatever
+// branches the player picked in the branch picker — same pool the
+// answer itself was drawn from.
+function getGuessablePool() {
+  if (currentMode === 'daily') {
+    const eligible = alllivers.filter((t) => DAILY_BRANCHES.includes(String(t.branch).toLowerCase()));
+    return eligible.length > 0 ? eligible : alllivers;
+  }
+  return getUnlimitedPool();
 }
 
 function preloadTalentImages(livers) {
@@ -78,9 +161,11 @@ async function resolveDailyAnswer(dateKey, livers) {
 // Last-resort fallback, only used if the RPC call above fails outright
 // ----------------------------------------------------------------
 function resolveDailyAnswerFallback(dateKey, livers) {
+  const eligible = livers.filter((t) => DAILY_BRANCHES.includes(String(t.branch).toLowerCase()));
+  const pool = eligible.length > 0 ? eligible : livers;
   const seed = hashString(dateKey);
-  const index = seed % livers.length;
-  return livers[index];
+  const index = seed % pool.length;
+  return pool[index];
 }
 
 function resolveUnlimitedAnswer(livers) {
@@ -312,96 +397,132 @@ async function initGame() {
 
 async function switchMode(mode, isInitialLoad = false) {
   currentMode = mode;
-  guesses = [];
-  gameOver = false;
-  answerliver = null;
-
   updateModeToggle(mode);
 
   if (mode === 'daily') {
     const dateKey = todayKey();
-    answerliver = await resolveDailyAnswer(dateKey, alllivers);
+    const resolved = await resolveDailyAnswer(dateKey, alllivers);
 
-    if (!answerliver) {
+    // Bail if the user left Daily while this RPC was in flight
+    if (currentMode !== 'daily') return;
+
+    if (!resolved) {
       showError('Could not determine today\u2019s puzzle. Please try again later.');
       return;
     }
 
+    dailyState = { answer: resolved, guesses: [], gameOver: false };
+
     // Restore saved daily progress (guesses made earlier today).
     const saved = loadProgress();
-    if (saved && saved.answerId === answerliver.id) {
-      guesses = saved.guessIds
+    if (saved && saved.answerId === resolved.id) {
+      dailyState.guesses = saved.guessIds
         .map((id) => alllivers.find((t) => t.id === id))
         .filter(Boolean)
-        .map((t) => compareGuess(t, answerliver));
-      gameOver = saved.gameOver;
+        .map((t) => compareGuess(t, resolved));
+      dailyState.gameOver = saved.gameOver;
     }
+    applyState(dailyState);
   } else {
-    // Unlimited: restore a saved in-progress round if one exists,
-    // otherwise pick a fresh random liver.
     const savedUnlimited = loadUnlimitedProgress();
+    unlimitedState = { answer: null, guesses: [], gameOver: false };
+    guesses = [];
+    gameOver = false;
+    renderBoard();
     if (savedUnlimited) {
       const savedAnswer = alllivers.find((t) => t.id === savedUnlimited.answerId);
       if (savedAnswer) {
-        answerliver = savedAnswer;
-        guesses = savedUnlimited.guessIds
+        unlimitedState.answer = savedAnswer;
+        unlimitedState.guesses = savedUnlimited.guessIds
           .map((id) => alllivers.find((t) => t.id === id))
           .filter(Boolean)
-          .map((t) => compareGuess(t, answerliver));
-        gameOver = savedUnlimited.gameOver;
+          .map((t) => compareGuess(t, savedAnswer));
+        unlimitedState.gameOver = savedUnlimited.gameOver;
+        // Restore the branch filter this round was started with, so a
+        // page reload mid-round doesn't silently reopen guessing to
+        // every branch again.
+        selectedBranches = loadSavedBranches() || getAllBranches();
       } else {
         // Saved liver no longer in active roster (e.g. was deactivated)
         // — start fresh rather than restoring a broken state.
         clearUnlimitedProgress();
-        answerliver = resolveUnlimitedAnswer(alllivers);
+        selectedBranches = await chooseBranches();
+        unlimitedState.answer = resolveUnlimitedAnswer(getUnlimitedPool());
       }
     } else {
-      answerliver = resolveUnlimitedAnswer(alllivers);
+      selectedBranches = await chooseBranches();
+      unlimitedState.answer = resolveUnlimitedAnswer(getUnlimitedPool());
     }
+    if (currentMode !== 'unlimited') return;
+    applyState(unlimitedState);
   }
+}
 
+function applyState(state) {
+  answerliver = state.answer;
+  guesses = state.guesses;
+  gameOver = state.gameOver;
+
+  const giveUpBtn = document.getElementById('give-up-button');
+  if (giveUpBtn) {
+    giveUpBtn.style.display = (currentMode === 'unlimited' && !gameOver) ? 'inline-flex' : 'none';
+  }
+  const changeBranchesBtn = document.getElementById('settings-button');
+  if (changeBranchesBtn) {
+    changeBranchesBtn.style.display = (currentMode === 'unlimited' && !gameOver) ? 'inline-flex' : 'none';
+  }
   stopCountdown();
   renderBoard();
-
-  if (!isInitialLoad) {
-    setupAutocomplete();
-  }
-
-  if (gameOver) {
-    showEndState();
-  }
+  if (gameOver) showEndState();
 }
 
 // ----------------------------------------------------------------
 // Unlimited Mode
 // ----------------------------------------------------------------
-function newUnlimitedRound() {
+async function newUnlimitedRound() {
   clearUnlimitedProgress();
   guesses = [];
   gameOver = false;
-  answerliver = resolveUnlimitedAnswer(alllivers);
   renderBoard();
-  setupAutocomplete();
+  if (!selectedBranches || selectedBranches.length === 0) {
+    selectedBranches = loadSavedBranches() || await chooseBranches();
+  }
+  unlimitedState = { answer: resolveUnlimitedAnswer(getUnlimitedPool()), guesses: [], gameOver: false };
+  applyState(unlimitedState);
 }
 
+// Called by modal.js's Settings modal when the player applies a new
+// branch selection. Starts a fresh unlimited round under the new
+// filter. If a future "Columns" tab is added to Settings, extend the
+// payload object rather than adding a second global callback.
+window.onSettingsApplied = function ({ branches }) {
+  if (currentMode !== 'unlimited') return;
+  selectedBranches = branches;
+  saveBranches(branches);
+  clearUnlimitedProgress();
+  unlimitedState = { answer: resolveUnlimitedAnswer(getUnlimitedPool()), guesses: [], gameOver: false };
+  applyState(unlimitedState);
+};
 
 function submitGuess(liver) {
   if (gameOver) return;
   if (guesses.some((g) => g.liver.id === liver.id)) return; // no duplicate guesses
-
+  
   const result = compareGuess(liver, answerliver);
   guesses.unshift(result); // newest guess on top, like a feed
 
 
   if (liver.id === answerliver.id) {
     gameOver = true;
-    recordWin(guesses.length);
+    (currentMode === 'daily' ? dailyState : unlimitedState).gameOver = true; 
+    recordResult(currentMode, { won: true, guessCount: guesses.length }, getBranchSignature(selectedBranches));
   }
 
   saveProgress();
   renderBoard(true); // animate the flip reveal for this fresh guess only
 
   if (gameOver) {
+    document.getElementById('give-up-button')?.style.setProperty('display', 'none');
     showEndState();
   }
 }
@@ -413,7 +534,7 @@ function showError(message) {
   }
 }
 // ----------------------------------------------------------------
-// Unlimited Mode - Stats
+// Stats
 // ----------------------------------------------------------------
 
 const STATS_KEYS = {
@@ -424,66 +545,104 @@ const STATS_KEYS = {
 function defaultStats(mode) {
   const base = {
     totalGuessesOnWins: 0,
-    totalPlayed: 0
+    totalGuessesAll: null,
+    totalPlayed: 0,
+    totalWins: 0,
   };
   if (mode === 'daily') {
-    // Daily needs date tracking for skip-a-day streak detection
     base.currentStreak = 0;
     base.bestStreak = 0;
-    base.lastSolvedDate = null; // 'YYYY-MM-DD' of the most recent solved day
+    base.lastSolvedDate = null;
   }
   return base;
 }
 
-function loadStats(mode) {
-  try {
-    const raw = localStorage.getItem(STATS_KEYS[mode]);
-    if (!raw) return defaultStats(mode);
-    return { ...defaultStats(mode), ...JSON.parse(raw) };
-  } catch (e) {
-    return defaultStats(mode);
-  }
+// Order-independent key for a branch selection, e.g. ['jp','en'] -> 'en,jp'
+function getBranchSignature(branches) {
+  return [...branches].sort().join(',');
 }
- 
-function saveStats(mode, stats) {
+
+function loadUnlimitedStatsMap() {
+  let map;
   try {
-    localStorage.setItem(STATS_KEYS[mode], JSON.stringify(stats));
+    const raw = localStorage.getItem(STATS_KEYS.unlimited);
+    map = raw ? JSON.parse(raw) : {};
+  } catch (e) {
+    map = {};
+  }
+  if (map && typeof map === 'object' && 'totalPlayed' in map) {
+    const legacy = map;
+    const allSig = getBranchSignature(getAllBranches());
+    map = { [allSig]: legacy };
+    saveUnlimitedStatsMap(map);
+  }
+  return map || {};
+}
+
+function saveUnlimitedStatsMap(map) {
+  try {
+    localStorage.setItem(STATS_KEYS.unlimited, JSON.stringify(map));
   } catch (e) {
     console.warn('Could not save stats:', e);
   }
 }
- 
-function recordWin(guessCount) {
-  const mode = currentMode;
-  const stats = loadStats(mode);
- 
+
+function loadStats(mode, branchSignature) {
   if (mode === 'daily') {
+    try {
+      const raw = localStorage.getItem(STATS_KEYS.daily);
+      if (!raw) return defaultStats('daily');
+      return { ...defaultStats('daily'), ...JSON.parse(raw) };
+    } catch (e) {
+      return defaultStats('daily');
+    }
+  }
+  const map = loadUnlimitedStatsMap();
+  return { ...defaultStats('unlimited'), ...(map[branchSignature] || {}) };
+}
+ 
+function saveStats(mode, stats, branchSignature) {
+  if (mode === 'daily') {
+    try {
+      localStorage.setItem(STATS_KEYS.daily, JSON.stringify(stats));
+    } catch (e) {
+      console.warn('Could not save stats:', e);
+    }
+    return;
+  }
+  const map = loadUnlimitedStatsMap();
+  map[branchSignature] = stats;
+  saveUnlimitedStatsMap(map);
+}
+ 
+function recordResult(mode, { won, guessCount = 0 }, branchSignature) {
+  const stats = loadStats(mode, branchSignature);
+
+  if (mode === 'daily') {
+    if (!won) return; // no give-up path in daily
+
     const today = todayKey();
     const yesterday = getPreviousDay(today);
- 
-    // Guard against double-counting if the page is reloaded after solving
-    if (stats.lastSolvedDate === today) return;
- 
+    if (stats.lastSolvedDate === today) return; // guard double-count on reload
+
     stats.totalPlayed += 1;
+    stats.totalWins += 1;
     stats.totalGuessesOnWins += guessCount;
- 
-    // Streak continues only if the last solved day was yesterday.
-    // Otherwise it's been skipped — reset to 1.
-    if (stats.lastSolvedDate === yesterday) {
-      stats.currentStreak += 1;
-    } else {
-      stats.currentStreak = 1;
-    }
- 
+    stats.totalGuessesAll += guessCount;
+
+    stats.currentStreak = stats.lastSolvedDate === yesterday ? stats.currentStreak + 1 : 1;
     stats.bestStreak = Math.max(stats.bestStreak, stats.currentStreak);
     stats.lastSolvedDate = today;
   } else {
-    // Unlimited: no loss condition, streak only ever grows
-    stats.totalPlayed += 1;
-    stats.totalGuessesOnWins += guessCount;
+    stats.totalPlayed += 1; // wins AND give-ups count as played
+    stats.totalGuessesAll += guessCount;
+    if (won) {
+      stats.totalWins += 1;
+      stats.totalGuessesOnWins += guessCount;
+    }
   }
- 
-  saveStats(mode, stats);
+
+  saveStats(mode, stats, branchSignature);
 }
  
 // Returns 'YYYY-MM-DD' for the calendar day before the given dateKey
@@ -496,10 +655,68 @@ function getPreviousDay(dateKey) {
   return `${y}-${m}-${day}`;
 }
  
-function getStats(mode) {
-  const stats = loadStats(mode);
-  const avg = stats.totalPlayed > 0
-    ? (stats.totalGuessesOnWins / stats.totalPlayed).toFixed(1)
+function getStats(mode, branchSignature) {
+  const stats = loadStats(mode, branchSignature);
+  const averageGuessesOnWins = stats.totalWins > 0
+    ? (stats.totalGuessesOnWins / stats.totalWins).toFixed(1)
     : '—';
-  return { ...stats, averageGuesses: avg };
+  const averageGuessesAll = (stats.totalGuessesAll != null && stats.totalPlayed > 0)
+    ? (stats.totalGuessesAll / stats.totalPlayed).toFixed(1)
+    : '—';
+  return { ...stats, averageGuessesOnWins, averageGuessesAll };
+}
+
+function giveUpUnlimited() {
+  if (currentMode !== 'unlimited' || gameOver) return;
+
+  gameOver = true;
+  gaveUp = true;
+  recordResult('unlimited', { won: false, guessCount: guesses.length }, getBranchSignature(selectedBranches));
+  saveProgress();
+  renderBoard();
+  showEndState(true);
+}
+
+function formatBranchName(branch) {
+  return BRANCH_DISPLAY_NAMES[branch] || branch;
+}
+
+// Turns a branch signature back into a display label, e.g.
+// "en,jp" -> "EN, JP". If the signature matches every known branch,
+// show "All branches" instead of spelling all of them out.
+function getBranchLabel(signature) {
+  if (!signature) return 'All branches';
+  const branches = signature.split(',').filter(Boolean);
+  const allSig = getBranchSignature(getAllBranches());
+  if (signature === allSig) return 'All branches';
+  return branches.map(formatBranchName).join(', ');
+}
+
+// Every branch-combo the player has ever recorded unlimited stats
+// under, with derived win rate, sorted by most-played first.
+function getAllUnlimitedStats() {
+  const map = loadUnlimitedStatsMap();
+  return Object.keys(map)
+    .map((sig) => {
+      const stats = { ...defaultStats('unlimited'), ...map[sig] };
+      const averageGuessesOnWins = stats.totalWins > 0
+        ? (stats.totalGuessesOnWins / stats.totalWins).toFixed(1)
+        : '—';
+      const averageGuessesAll = (stats.totalGuessesAll != null && stats.totalPlayed > 0)
+        ? (stats.totalGuessesAll / stats.totalPlayed).toFixed(1)
+        : '—';
+      const winRate = stats.totalPlayed > 0
+        ? Math.round((stats.totalWins / stats.totalPlayed) * 100)
+        : 0;
+      return {
+        signature: sig,
+        label: getBranchLabel(sig),
+        totalPlayed: stats.totalPlayed,
+        totalWins: stats.totalWins,
+        winRate,
+        averageGuessesOnWins,
+        averageGuessesAll,
+      };
+    })
+    .sort((a, b) => b.totalPlayed - a.totalPlayed);
 }

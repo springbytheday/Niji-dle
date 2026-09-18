@@ -12,6 +12,7 @@ const STATUS_LABELS = {
   testing: 'Testing',
   done: 'Done',
   wontfix: "Won't fix",
+  resolved: 'Resolved'
 };
 
 function escapeHtml(str) {

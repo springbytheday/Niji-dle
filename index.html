@@ -42,19 +42,46 @@
         <span class="brand-mark">Niji-Dle</span>
       </div>
       <div class="topbar-actions">
-        <button id="announcement-button" class="icon-button" type="button" aria-label="Announcement"
-          aria-haspopup="dialog">
-          <span aria-hidden="true">📢</span>
-        </button>
-        <button id="info-button" class="icon-button" type="button" aria-label="Information" aria-haspopup="dialog">
-          <span aria-hidden="true" style="font-style: italic;">i</span>
-        </button>
-        <button id="help-button" class="icon-button" type="button" aria-label="How to play" aria-haspopup="dialog">
-          <span aria-hidden="true">?</span>
-        </button>
-        <button id="theme-toggle" class="icon-button" type="button" aria-label="Toggle light/dark theme">
-          <span id="theme-toggle-icon" aria-hidden="true">&#9788;</span>
-        </button>
+<button id="announcement-button" class="icon-button" type="button" aria-label="Announcement"
+  aria-haspopup="dialog">
+<svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <path d="M3 10v4a1 1 0 0 0 1 1h1l2 6h2l-1-6h2l7 4V5l-7 4H7l-2 1H4a1 1 0 0 0-1 1Z" />
+  <line x1="21" y1="9" x2="21" y2="15" />
+</svg>
+</button>
+<button id="info-button" class="icon-button" type="button" aria-label="Information" aria-haspopup="dialog">
+  <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9" />
+    <line x1="12" y1="11" x2="12" y2="16" />
+    <circle cx="12" cy="7.5" r="0.9" fill="currentColor" stroke="none" />
+  </svg>
+</button>
+<button id="help-button" class="icon-button" type="button" aria-label="How to play" aria-haspopup="dialog">
+  <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="9" />
+    <path d="M9.3 9.2a2.7 2.7 0 0 1 5.2 1c0 1.8-2.5 2-2.5 3.6" />
+    <circle cx="12" cy="16.8" r="0.9" fill="currentColor" stroke="none" />
+  </svg>
+</button>
+<button id="theme-toggle" class="icon-button" type="button" aria-label="Toggle light/dark theme">
+  <span id="theme-toggle-icon" aria-hidden="true">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="4" />
+      <line x1="12" y1="2" x2="12" y2="4" />
+      <line x1="12" y1="20" x2="12" y2="22" />
+      <line x1="4.2" y1="4.2" x2="5.6" y2="5.6" />
+      <line x1="18.4" y1="18.4" x2="19.8" y2="19.8" />
+      <line x1="2" y1="12" x2="4" y2="12" />
+      <line x1="20" y1="12" x2="22" y2="12" />
+      <line x1="4.2" y1="19.8" x2="5.6" y2="18.4" />
+      <line x1="18.4" y1="5.6" x2="19.8" y2="4.2" />
+    </svg>
+  </span>
+</button>
       </div>
     </header>
     <div id="announcement-overlay" class="overlay-overlay">
@@ -65,18 +92,15 @@
         <h2 id="announcement-title" class="overlay-title">📢 Announcement</h2>
 
         <p class="overlay-text">
-          🎨 Hey players, we need your help! 🌈
+          Hi players, major update 2 is here! 
           <br /><br />
-          We're working on improving Niji-Dle's colour categorisation, and you can help us out!
-          <br /><br />
-          Head over to our <a href="/color-sorter" target="_blank">Colour Sorter</a> and sort the colours
-          into the
-          families
-          you think they belong in. ✨
-          <br /><br />
-          You're not required to sort all to put in a submission.
-          <br /><br />
-          Every colour counts — thank you for helping! 💖🎨
+          🎉 Unlimited Mode now lets you choose which branches to play, give up when you're stuck, and view statistics for every branch combination.
+          <br/>
+          We're also given the end screen a fresh new look, featuring Liver's image and links to his YouTube and X profiles.
+          <br/><br/>
+          To find our what else is planned, check out <a href="/updates/index.html" target="_blank" rel="noopener noreferrer" class="overlay-link">
+          here
+        </a>
         </p>
 
         <!--
@@ -224,22 +248,114 @@
 
       </div>
     </div>
+    <div id="giveup-overlay" class="overlay-overlay">
+      <div id="giveup-dialog" class="overlay-dialog" role="dialog" aria-modal="true" aria-labelledby="giveup-title"
+        tabindex="-1">
+        <button id="giveup-close" class="overlay-close" type="button" aria-label="Cancel">&times;</button>
 
+        <h2 id="giveup-title" class="overlay-title">Give up?</h2>
+        <p class="overlay-text">
+          This reveals the answer and counts as a played round in your stats.
+        </p>
+
+        <button id="giveup-confirm" class="overlay-start" type="button">
+          Yes, give up
+        </button>
+        <button id="giveup-cancel" class="overlay-cancel" type="button">
+          Keep playing
+        </button>
+      </div>
+    </div>
+    <div id="branch-overlay" class="overlay-overlay">
+      <div id="branch-dialog" class="overlay-dialog" role="dialog" aria-modal="true" aria-labelledby="branch-title"
+        tabindex="-1">
+        <button id="branch-close" class="overlay-close" type="button" aria-label="Close branch picker">
+          &times;
+        </button>
+
+        <h2 id="branch-title" class="overlay-title">Choose branches</h2>
+
+        <p class="overlay-text">
+          Pick which Nijisanji branches Unlimited mode can draw the answer from.
+        </p>
+
+        <div id="branch-checkbox-list" class="branch-checkbox-list"></div>
+
+        <p id="branch-error" class="branch-error" role="alert"></p>
+
+        <button id="branch-start" class="overlay-start" type="button">
+          Start guessing
+        </button>
+      </div>
+    </div>
+    <div id="allstats-overlay" class="overlay-overlay">
+      <div id="allstats-dialog" class="overlay-dialog" tabindex="-1" role="dialog" aria-modal="true"
+        aria-labelledby="allstats-title">
+        <button id="allstats-close" class="overlay-close" type="button" aria-label="Close">&times;</button>
+        <h2 id="allstats-title">All Unlimited Stats</h2>
+        <div id="allstats-body"></div>
+      </div>
+    </div>
+    <div id="settings-overlay" class="overlay-overlay">
+      <div id="settings-dialog" class="overlay-dialog" tabindex="-1" role="dialog" aria-modal="true"
+        aria-labelledby="settings-title">
+        <button id="settings-close" class="overlay-close" type="button" aria-label="Close">&times;</button>
+        <h2 id="settings-title" class="overlay-title">Settings</h2>
+
+        <div class="overlay-tabs">
+          <button class="overlay-tab overlay-tab--active" data-tab="branches">Branches</button>
+          <!-- Future: <button class="overlay-tab" data-tab="columns">Columns</button> -->
+        </div>
+
+        <div id="settings-tab-branches" class="overlay-panel">
+          <p class="settings-hint">Choose which branches Unlimited draws its answer from.</p>
+          <div id="settings-branch-list" class="branch-checkbox-list"></div>
+          <p id="settings-branch-error" class="branch-error" role="alert"></p>
+        </div>
+
+        <!-- Future:
+    <div id="settings-tab-columns" class="overlay-panel overlay-panel--hidden">
+      <p class="settings-hint">Coming soon: choose which columns appear on the board.</p>
+    </div>
+    -->
+
+        <button id="settings-apply" class="overlay-start" type="button">Apply</button>
+      </div>
+    </div>
     <main class="game">
-      <div class="mode-tabs" role="tablist">
-        <button id="mode-daily" class="mode-tab mode-tab--active" role="tab" aria-selected="true" type="button"
-          onclick="switchMode('daily')">Daily</button>
-        <button id="mode-unlimited" class="mode-tab" role="tab" aria-selected="false" type="button"
-          onclick="switchMode('unlimited')">Unlimited</button>
+      <div class="mode-row">
+        <div class="mode-tabs" role="tablist">
+          <button id="mode-daily" class="mode-tab mode-tab--active" role="tab" aria-selected="true" type="button"
+            onclick="switchMode('daily')">Daily</button>
+          <button id="mode-unlimited" class="mode-tab" role="tab" aria-selected="false" type="button"
+            onclick="switchMode('unlimited')">Unlimited</button>
+        </div>
+<button id="settings-button" class="icon-button" type="button" aria-label="Unlimited mode settings"
+  aria-haspopup="dialog" style="display:none;">
+  <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="3" />
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33
+      1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.09-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0
+      1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0
+      1.51-1.09 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0
+      0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65
+      1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" />
+  </svg>
+</button>
       </div>
 
-      <p class="prompt">Guess the Nijisanji liver</p>
+      <p class="prompt">Guess the Nijisanji liver <span id ="puzzle-number" class="puzzle-number"></span></p>
 
-      <div class="guess-box">
-        <input id="guess-input" type="text" autocomplete="off" placeholder="Type a liver name&hellip;"
-          aria-label="Guess a liver" />
-        <div id="suggestions" class="suggestions" role="listbox"></div>
+      <div class="guess-row">
+        <div class="guess-box">
+          <input id="guess-input" type="text" autocomplete="off" placeholder="Type a liver name&hellip;"
+            aria-label="Guess a liver" />
+          <div id="suggestions" class="suggestions" role="listbox"></div>
+        </div>
+        <button id="give-up-button" class="give-up-button" type="button">Give up</button>
       </div>
+
 
       <div id="end-banner" class="end-banner"></div>
 
@@ -268,7 +384,7 @@
       <p class="footer-text">Spotted any mistakes or have a suggestion?</p>
       <a id="feedback-link" class="footer-feedback-link" href="https://forms.gle/bh3GgWXefc9dMcMg7" target="_blank"
         rel="noopener noreferrer">
-        Link to Google Form
+        Link to Feedback Form
       </a>
       <br />
       <a id="discord-link" class="footer-discord-link footer-feedback-link" href="https://discord.gg/9r8avqkqtn"

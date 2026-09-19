@@ -119,3 +119,35 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Notify Discord
+        if: success()
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          DISCORD_ROLE_ID: ${{ secrets.DISCORD_ROLE_ID }}
+        run: |
+          SHORT_MSG=$(echo "$COMMIT_MSG" | head -n1 | cut -c1-200)
+
+          PAYLOAD=$(jq -n \
+            --arg content "<@&${DISCORD_ROLE_ID}>" \
+            --arg title "✅ Niji-Dle updated" \
+            --arg desc "$SHORT_MSG" \
+            --arg url "$RUN_URL" \
+            --argjson color 3066993 \
+            '{
+              content: $content,
+              allowed_mentions: { parse: ["roles"] },
+              embeds: [{
+                title: $title,
+                description: $desc,
+                url: $url,
+                color: $color,
+                fields: [
+                  { name: "Play now", value: "[nijidle.com](https://www.nijidle.com/)", inline: true }
+                ]
+              }]
+            }')
+
+          curl -sf -H "Content-Type: application/json" -d "$PAYLOAD" "$DISCORD_WEBHOOK_URL"
